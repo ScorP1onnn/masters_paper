@@ -1,6 +1,14 @@
 import numpy as np
 from uncertainties import ufloat
 from math import *
+import scipy.constants as const
+
+
+def ghz_to_mum(frequency_GHz):
+    return (const.c/frequency_GHz/1e9) * 1e6
+
+def mum_to_ghz(wavelength_um):
+    return (const.c/(wavelength_um / 1e6))/1e9
 
 def luminosity_distance(x,H_0=70,W_M=0.3):
     z=x
@@ -113,3 +121,7 @@ def line_luminosity_solar(I, obs_freq, err_I=0, z=0, D_Mpc=0, err_D_Mpc=0, mu=1,
 
     print(f"Line Luminosity Before magnification correction = {line_luminsoity} x10^8 L_(.)")
     print(f"Line Luminosity After magnification correction = {line_luminsoity / mu} x10^8 L_(.)")
+
+
+
+
