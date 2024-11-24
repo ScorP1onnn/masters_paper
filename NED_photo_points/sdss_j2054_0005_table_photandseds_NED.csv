@@ -1,0 +1,8 @@
+No.,Observed Passband,Photometry Measurement,Uncertainty,Units,Frequency,Flux Density,Upper limit of uncertainty,Lower limit of uncertainty,Upper limit of Flux Density,Lower limit of Flux Density,NED Uncertainty,NED Units,Refcode,Significance,Published frequency,Frequency Mode,Coordinates Targeted,Spatial Mode,Qualifiers,Comments
+1,i (Pan-STARRS1) AB,22.65,+/-0.20,mag,3.97E14,3.16E-6,5.83E-7,5.83E-7,,,+/-5.83E-07,Jy,2014AJ....148...14B,uncertainty,7549 A,Broad-band measurement,20 54 06.50 -00 05 14.4 (J2000),Flux in fixed aperture,,From new raw data
+2,i (APO) AB,23.3,+/-0.22,mag,3.91E14,1.74E-6,3.52E-7,3.52E-7,,,+/-3.52E-07,Jy,2008AJ....135.1057J,uncertainty,7672 A,Broad-band measurement,,Flux integrated from map,,From reprocessed raw data
+3,z (Pan-STARRS1) AB,21.01,+/-0.09,mag,3.45E14,1.43E-5,1.19E-6,1.19E-6,,,+/-1.19E-06,Jy,2014AJ....148...14B,uncertainty,8701 A,Broad-band measurement,20 54 06.50 -00 05 14.4 (J2000),Flux in fixed aperture,,From new raw data
+4,z (APO) AB,20.72,+/-0.09,mag,3.3E14,1.87E-5,1.55E-6,1.55E-6,,,+/-1.55E-06,Jy,2008AJ....135.1057J,uncertainty,9097 A,Broad-band measurement,,Flux integrated from map,,From reprocessed raw data
+5,y (Pan-STARRS1) AB,20.66,+/-0.17,mag,3.15E14,1.98E-5,3.1E-6,3.1E-6,,,+/-3.10E-06,Jy,2014AJ....148...14B,uncertainty,9510 A,Broad-band measurement,20 54 06.50 -00 05 14.4 (J2000),Flux in fixed aperture,,From new raw data
+6,J (MMT),19.18,+/-0.06,mag,2.5E14,3.39E-5,1.87E-6,1.87E-6,,,+/-1.87E-06,Jy,2008AJ....135.1057J,uncertainty,1.2 microns,Broad-band measurement,,Flux integrated from map,,From new raw data
+7,K (Keck),19.2,,mag,1.37E14,1.3E-5,,,,,,Jy,2009MNRAS.395.1476R,no uncertainty reported,2.19 microns,Broad-band measurement,,Not reported in paper,,From new raw data
