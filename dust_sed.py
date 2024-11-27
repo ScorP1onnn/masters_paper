@@ -1,18 +1,14 @@
 import numpy as np
-from networkx.algorithms.bipartite import color
-from scipy.ndimage import label
 import pandas as pd
 from scipy.optimize import curve_fit
 import interferopy.tools as iftools #(uses only numpy versions 1.x not 2.x)
 import matplotlib.pyplot as plt
-from scipy.constants import c
-import scipy.constants as const
-from astropy.cosmology import FlatLambdaCDM
-import astropy.units as u
-import emcee
-from scipy.signal import freqs
 from uncertainties import ufloat
 import utils as utils
+import astropy.units as u
+
+
+exit()
 
 
 """
@@ -340,7 +336,6 @@ j2322_sai_flux = ufloat(17.4,2.6) #flux in mJy
 plt.scatter(j2322_wave,j2322_flux)
 #plt.scatter(utils.ghz_to_mum(96),0.31) #Ignore this point
 plt.scatter(j2322_sai_wave,j2322_sai_flux.n,label='Our Value',marker='*',s=120,color='blue')
-
 
 plt.xscale('log')
 plt.yscale('log')
