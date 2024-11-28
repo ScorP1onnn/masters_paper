@@ -171,9 +171,15 @@ def kappa(nu_rest,beta):
     """
 
     #Taken from Interferopy (Also see: https://iopscience.iop.org/article/10.3847/1538-4357/ab2beb/pdf)
+    #They have taken from Dunne+2003
     kappa_ref = 2.64  # m**2/kg
     kappa_nu_ref = const.c / 125e-6 # Hz
     return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
+
+    # Dunne+2000 ?
+    # kappa_ref=0.77*u.cm**2/u.g
+    # kappa_ref=kappa_ref.to(u.m**2/u.kg).value
+    # kappa_nu_ref=c/850e-6
 
     #Saw this value in Decarli et al. 2018 (https://www.aanda.org/articles/aa/pdf/2022/09/aa43920-22.pdf)
     #kappa_ref = 0.77 * u.cm**2/u.g
@@ -185,7 +191,7 @@ def kappa(nu_rest,beta):
     #kappa_ref = 0.45 * u.cm**2/u.g
     #kappa_ref = kappa_ref.to(u.m**2/u.kg).value
     #kappa_nu_ref = 250e9
-    return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
+    #return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
 
     """
     #Taken from Decarli et al. 2023
@@ -197,8 +203,9 @@ def kappa(nu_rest,beta):
             kv.append(kappa_Draine_2003(nu_rest = i,beta = beta))
         kv = np.asarray(kv)
         return kv
+        """
     
-    """
+
 
 
 
@@ -207,7 +214,7 @@ def kappa_Draine_2003(nu_rest,beta):
     """
      dust emissivity law following Draine et al. 2003 (https://arxiv.org/pdf/astro-ph/0304489)
 
-    :param nu: Rest frame frequency in Hz.
+    :param nu_rest: Rest frame frequency in Hz.
     :param beta: Emissivity coefficient, dimensionless
     :return: mass absorption coefficient (kappa) in m^2 kg^−1
     """
@@ -257,7 +264,7 @@ def kappa_Draine_2003(nu_rest,beta):
 def tau(nu_rest,beta,solid_angle,mass_dust,z):
 
     """
-
+    Optical Depth
     :param nu_rest: Rest frame frequency in Hz.
     :param beta: Emissivity coefficient, dimensionless.
     :param solid_angle: Solid angle in steradians.
@@ -273,14 +280,18 @@ def tau(nu_rest,beta,solid_angle,mass_dust,z):
 
 
 
-def dust_s_obs(nu_obs, z, solid_angle, mass_dust, temp_dust, beta, cmb_contrast = True, cmb_heating = True,
+
+
+
+
+def dust_s_obs(nu_obs, z,mass_dust, temp_dust, beta, cmb_contrast = True, cmb_heating = True,
+               solid_angle=0., optically_thick_regime=False,
                output_unit_mjy=False):
 
     """
 
     :param nu_obs: Observed frame frequency in Hz.
     :param z: Redshift
-    :param solid_angle: Solid angle in arcsec^2 (arcsec squared)
 
     :param mass_dust: Total dust mass in kg.
     :param temp_dust: Intrinsic dust temperature in K (the source would have at z=0).
@@ -290,47 +301,70 @@ def dust_s_obs(nu_obs, z, solid_angle, mass_dust, temp_dust, beta, cmb_contrast 
     :param cmb_heating: Correcting for cosmic microwave background heating (This is important at
     high redshifts (high-z) where the temperature of the CMB (T_CMB) ~ dust temperature (T_dust) )
 
-    :param output_unit_mjy: Convert W/Hz/m^2 to mJy
+    :param solid_angle: Solid angle in arcsec^2 (arcsec squared)
+    :param optically_thick_regime: IF True:- Calculations done assuming optically thick regime (tau is not ignored)
+                                   IF False:- Calculations done assuming optically thin regime (tau is ignored)
 
-    :return: Observed flux density in W/Hz/m^2 or mJy.
+    :param output_unit_mjy: Convert flux units W/Hz/m^2 to mJy
+    :return:
     """
 
-
-
     temp_cmb_0 = 2.73  # CMB temperature at z=0
-    temp_cmb_z = (1 + z) * temp_cmb_0 ## CMB temperature at z
+    temp_cmb_z = (1 + z) * temp_cmb_0  ## CMB temperature at z
+    nu_rest = nu_obs * (1 + z)  # Convert to rest frequencies
 
-    nu_rest = nu_obs * (1 + z) #Convert to rest frequencies
+    cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+    dl = cosmo.luminosity_distance(z).to(u.m).value
 
-    solid_angle_arcsec2 = solid_angle * u.arcsec**2
-    solid_angle_steradians = solid_angle_arcsec2.to(u.steradian).value
-
-    #Correct for CMB heating from da Cunha+2013 (See interferopy source code)
-
-    if cmb_heating==True:
+    # Correct for CMB heating from da Cunha+2013 (See interferopy source code)
+    if cmb_heating == True:
         temp_dust_z = (temp_dust ** (4 + beta) + temp_cmb_0 ** (4 + beta) * ((1 + z) ** (4 + beta) - 1)) ** (1 / (4 + beta))
     else:
         temp_dust_z = temp_dust
 
 
-    #Correct for CMB contrast
 
-    if cmb_contrast==True:
-        f_cmb = blackbody(nu_rest, temp_dust_z) - blackbody(nu_rest, temp_cmb_z)
-    else:
-        f_cmb = 1
+    #Optically think, tau is not ignored (Equation taken from Decarli et al. 2023)
+    if optically_thick_regime==True:
+        # Correct for CMB contrast from da Cunha+2013
+        if cmb_contrast == True:
+            f_cmb = blackbody(nu_rest, temp_dust_z) - blackbody(nu_rest, temp_cmb_z)
+        else:
+            f_cmb = 1
 
-    t = tau(nu_rest = nu_rest, beta=beta, solid_angle = solid_angle_steradians,mass_dust = mass_dust,z = z)
+        solid_angle_arcsec2 = solid_angle * u.arcsec ** 2
+        solid_angle_steradians = solid_angle_arcsec2.to(u.steradian).value
 
+        t = tau(nu_rest=nu_rest, beta=beta, solid_angle=solid_angle_steradians, mass_dust=mass_dust, z=z)
 
-    if output_unit_mjy==True:
-        flux_obs = (solid_angle_steradians/((1+z)**3)) * f_cmb * (1-np.exp(-t)) * 1e29
-    else:
         flux_obs = (solid_angle_steradians / ((1 + z) ** 3)) * f_cmb * (1 - np.exp(-t))
 
+        if output_unit_mjy == True:
+            return flux_obs * 1e29 #mJy
+        else:
+            return flux_obs #W/Hz/m^2
 
 
-    return flux_obs
+
+    if optically_thick_regime==False:
+
+        if cmb_contrast == True:
+            f_cmb = 1. - blackbody(nu_rest, temp_cmb_z) / blackbody(nu_rest, temp_dust_z)
+        else:
+            f_cmb = 1
+
+        flux_obs = (f_cmb * (1 + z) / dl**2) *  kappa(nu_rest=nu_rest,beta=beta) * mass_dust * blackbody(nu_rest, temp_dust)
+
+        if output_unit_mjy == True:
+            return flux_obs * 1e29 #mJy
+        else:
+            return flux_obs # W/Hz/m^2
+
+
+
+
+
+
 
 
 
@@ -397,7 +431,7 @@ def integrated_dust_luminosity(mass_dust, temp_dust, beta,only_IR=False,only_FIR
 
 
 
-
+"""
 #print(ghz_to_mum(freq*(1+z_qso)))
 mass = mass_kgs_solar_conversion(4.4e8,'solar')
 print(mass)
@@ -407,14 +441,16 @@ t.dust_cont_integrate(dust_mass=mass,dust_temp=71,dust_beta=1.86,print_to_consol
 
 exit()
 
+"""
 
 
 
+#######################################################################################################################
 """
 #Checking MBB SED fit for Decarli et al. 2023. The fit is good when I use kappa_draine_2003. Using other
 #kappa formulae as the one from interferopy or Tripodi et al. 2022 do not fit the Decarli et al. 2023 points well.
 
-
+print("Decarli et al. 2023 SED Check")
 freq = np.linspace(1e1,1e4,10000)
 mass = mass_kgs_solar_conversion(10**8.94,'solar')
 z_qso = 6.4386
@@ -423,14 +459,45 @@ decarli_freq = np.array([97.435,109.342,231.946, 239.520, 246.646, 255.459, 280.
 decarli_wave_mm = np.array([3.077, 2.742, 1.293,  1.252,  1.215, 1.174,  1.067,  1.023, 0.937, 0.904, 0.656,  0.639])
 decarli_flux_mjy = np.array([0.244,0.334,  3.81, 3.75, 4.33,  4.42, 5.82,  6.12,  8.15,  8.63, 12.52, 12.51])
 
-s = dust_s_obs(freq*1e9, z = z_qso, solid_angle=0.155, mass_dust=mass, temp_dust=47, beta=1.84,output_unit_mjy=True)
+s = dust_s_obs(freq*1e9, z = z_qso, solid_angle=0.155, mass_dust=mass, temp_dust=47, beta=1.84,
+               optically_thick_regime=True,output_unit_mjy=True)
 
 plt.scatter(decarli_freq,decarli_flux_mjy)
 plt.plot(freq,s)
 plt.xscale('log')
 plt.yscale('log')
 plt.ylim(1e-2,1e2)
+plt.xlabel("Observed Frequency [GHz]")
+plt.ylabel('Flux [mJy]')
+plt.show()
+"""
+##########
+"""
+#Checking for optically thin part of the function
+#Novak et al. 2019
+novak_freq = np.array([101.3, 141.6, 176.0,195.3, 221.8, 231.5, 293.7, 403.9])
+novak_flux = np.array([22.4, 63.8, 137, 214, 257, 394, 583, 993]) *1e-3 #Converting from micro-Jy to mJy
+
+freq = np.linspace(1e1,1e4,10000)
+
+mass_dust = mass_kgs_solar_conversion(0.38e8,'solar')
+temp_dust = 47
+beta = 1.85
+z_qso=7.5413
+s = dust_s_obs(nu_obs=freq*1e9, z=z_qso,mass_dust=mass_dust,temp_dust=temp_dust,beta=beta,output_unit_mjy=True)
+
+
+plt.scatter(novak_freq,novak_flux)
+plt.plot(freq,s)
+plt.xscale('log')
+plt.yscale('log')
+plt.ylim(1e-3,1e1)
+plt.xlabel("Observed Frequency [GHz]")
+plt.ylabel('Flux [mJy]')
 plt.show()
 
+integrated_dust_luminosity(mass_dust=mass_dust,temp_dust=temp_dust,beta=beta,print_value=True)
 
+#The SED fit and TIR/FIR values are consistent with those from Novak et al. 2019 (https://arxiv.org/pdf/1906.08569)
 """
+
