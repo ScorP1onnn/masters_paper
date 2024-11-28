@@ -6,6 +6,8 @@ import scipy.constants as const
 from scipy.interpolate import CubicSpline, Akima1DInterpolator
 import astropy.units as u
 from astropy.cosmology import FlatLambdaCDM
+from scipy import integrate
+import interferopy.tools as t
 
 def ghz_to_mum(frequency_GHz):
     return (const.c/frequency_GHz/1e9) * 1e6
@@ -14,15 +16,17 @@ def mum_to_ghz(wavelength_um):
     return (const.c/(wavelength_um / 1e6))/1e9
 
 
-def mass_kgs_to_solar(mass,unit_of_input_mass):
+def mass_kgs_solar_conversion(mass,unit_of_input_mass):
     # 1 solar mass in kilograms
     solar_mass_kg = 1.989e+30 #Solar mass in kg
 
     if unit_of_input_mass == 'kg' or unit_of_input_mass == 'kgs':
+        print("Converting mass from kg to solar masses")
         return mass / solar_mass_kg # Convert kg to solar masses
 
     elif unit_of_input_mass == 'solar':
-        return mass * solar_mass_kg
+        print("Converting mass from solar masses to kg")
+        return mass * solar_mass_kg #Convert solar masses to kg
 
     else:
         raise ValueError("Invalid target unit. Use 'solar' for solar masses or 'kg' for kilograms.")
@@ -167,9 +171,9 @@ def kappa(nu_rest,beta):
     """
 
     #Taken from Interferopy (Also see: https://iopscience.iop.org/article/10.3847/1538-4357/ab2beb/pdf)
-    #kappa_ref = 2.64  # m**2/kg
-    #kappa_nu_ref = const.c / 125e-6 # Hz
-    #return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
+    kappa_ref = 2.64  # m**2/kg
+    kappa_nu_ref = const.c / 125e-6 # Hz
+    return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
 
     #Saw this value in Decarli et al. 2018 (https://www.aanda.org/articles/aa/pdf/2022/09/aa43920-22.pdf)
     #kappa_ref = 0.77 * u.cm**2/u.g
@@ -181,20 +185,20 @@ def kappa(nu_rest,beta):
     #kappa_ref = 0.45 * u.cm**2/u.g
     #kappa_ref = kappa_ref.to(u.m**2/u.kg).value
     #kappa_nu_ref = 250e9
-    #return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
+    return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
 
     """
     #Taken from Decarli et al. 2023
-    kv = []
-    for i in nu_rest:
-        kv.append(kappa_Draine_2003(nu_rest = i,beta = beta))
-
-    kv = np.asarray(kv)
-    return kv
+    if isinstance(nu_rest, (float)) == True:
+        return kappa_Draine_2003(nu_rest = nu_rest,beta = beta)
+    else:
+        kv = []
+        for i in nu_rest:
+            kv.append(kappa_Draine_2003(nu_rest = i,beta = beta))
+        kv = np.asarray(kv)
+        return kv
     
     """
-
-
 
 
 
@@ -331,27 +335,95 @@ def dust_s_obs(nu_obs, z, solid_angle, mass_dust, temp_dust, beta, cmb_contrast 
 
 
 
+def dust_luminosity_one_freq_value(nu_rest_one_value, mass_dust, temp_dust, beta):
+    """
+    Compute intrinsic dust luminosity at specific rest frame frequency assuming modified black body emission.
+    :param nu_rest_one_value: Rest frame frequency in Hz.
+    :param mass_dust:Total dust mass in kg.
+    :param temp_dust:Dust temperature in K.
+    :param beta:Emissivity coefficient, dimensionless.
+    :return:  Luminosity (at rest frequency nu) in W/Hz
+    """
+    lum_nu = 4 * const.pi * kappa(nu_rest=nu_rest_one_value,beta=beta) * mass_dust * blackbody(nu_rest_one_value, temp_dust)
+    return lum_nu
 
-#print(kappa(nu=mum_to_ghz(10) * 1e9))
+
+
+
+
+#Recheck this
+#Adopting the kappa value from interferopy, I and dust_cont_integrate are getting the same values (which is expected)
+#However, the values are totally wrong when compared to estimates from Tripodi et al. 2022, Decarli et al. 2023.
+#I should check why that is the case.
+def integrated_dust_luminosity(mass_dust, temp_dust, beta,only_IR=False,only_FIR=False,print_value=True):
+
+    # Total IR is 8 - 1000 microns
+    lum_tir = integrate.quad(lambda x: dust_luminosity_one_freq_value(nu_rest_one_value = x,
+                                                                      mass_dust=mass_dust,
+                                                                      temp_dust=temp_dust,
+                                                                      beta=beta), const.c / (1000e-6), const.c / (8e-6))
+
+    # Far IR is 42.5 - 122.5 microns
+    lum_fir = integrate.quad(lambda x: dust_luminosity_one_freq_value(x, mass_dust, temp_dust, beta), const.c / (122.5e-6), const.c / (42.5e-6))
+
+    print(np.round(lum_tir[0] * u.W.to(u.solLum) * 1e-12, 3))
+
+    if only_IR==True:
+        return np.round(lum_tir[0] * u.W.to(u.solLum), 3)
+    elif only_IR==True and print_value==True:
+        print("Ltir (10^12 Lsol) = ",np.round(lum_tir[0] * u.W.to(u.solLum) * 1e-12, 3),
+              "( or logLtir = ", np.round(np.log10((lum_tir[0] * u.W.to(u.solLum))),3),')')
+        return np.round(lum_tir[0] * u.W.to(u.solLum), 3)
+
+
+    if only_FIR==True:
+        return np.round(lum_fir[0] * u.W.to(u.solLum), 3)
+    elif only_FIR==True and print_value==True:
+        print("Lfir (10^12 Lsol) =",np.round(lum_fir[0] * u.W.to(u.solLum) * 1e-12, 3),
+              "( or logLfir = ", np.round(np.log10((lum_fir[0] * u.W.to(u.solLum))),3),')')
+        return np.round(lum_fir[0] * u.W.to(u.solLum), 3)
+
+    if only_IR==False and only_FIR==False and print_value==True:
+        print("Ltir (10^12 Lsol) = ", np.round(lum_tir[0] * u.W.to(u.solLum) * 1e-12, 3),
+              "( or logLtir = ", np.round(np.log10((lum_tir[0] * u.W.to(u.solLum))),3),')')
+
+        print("Lfir (10^12 Lsol) =", np.round(lum_fir[0] * u.W.to(u.solLum) * 1e-12, 3),
+              "( or logLfir = ", np.round(np.log10((lum_fir[0] * u.W.to(u.solLum))),3),')')
+        return np.round(lum_tir[0] * u.W.to(u.solLum), 3), np.round(lum_fir[0] * u.W.to(u.solLum), 3)
+    else:
+        return np.round(lum_tir[0] * u.W.to(u.solLum), 3), np.round(lum_fir[0] * u.W.to(u.solLum), 3)
+
+
+
+
+
+
+#print(ghz_to_mum(freq*(1+z_qso)))
+mass = mass_kgs_solar_conversion(4.4e8,'solar')
+print(mass)
+i = integrated_dust_luminosity(mass_dust=mass,temp_dust=71,beta=1.86)
+print("")
+t.dust_cont_integrate(dust_mass=mass,dust_temp=71,dust_beta=1.86,print_to_console=True)
+
+exit()
+
+
+
+
+"""
+#Checking MBB SED fit for Decarli et al. 2023. The fit is good when I use kappa_draine_2003. Using other
+#kappa formulae as the one from interferopy or Tripodi et al. 2022 do not fit the Decarli et al. 2023 points well.
+
 
 freq = np.linspace(1e1,1e4,10000)
-mass = mass_kgs_to_solar(10**8.94,'solar')
+mass = mass_kgs_solar_conversion(10**8.94,'solar')
 z_qso = 6.4386
-#print(ghz_to_mum(freq*(1+z_qso)))
-
-
-s = dust_s_obs(freq*1e9, z = z_qso, solid_angle=0.155, mass_dust=mass, temp_dust=47, beta=1.84,output_unit_mjy=True)
-
-
-
-
 
 decarli_freq = np.array([97.435,109.342,231.946, 239.520, 246.646, 255.459, 280.875, 292.989, 292.989, 331.688, 457.035, 469.093])
 decarli_wave_mm = np.array([3.077, 2.742, 1.293,  1.252,  1.215, 1.174,  1.067,  1.023, 0.937, 0.904, 0.656,  0.639])
 decarli_flux_mjy = np.array([0.244,0.334,  3.81, 3.75, 4.33,  4.42, 5.82,  6.12,  8.15,  8.63, 12.52, 12.51])
 
-
-
+s = dust_s_obs(freq*1e9, z = z_qso, solid_angle=0.155, mass_dust=mass, temp_dust=47, beta=1.84,output_unit_mjy=True)
 
 plt.scatter(decarli_freq,decarli_flux_mjy)
 plt.plot(freq,s)
@@ -361,4 +433,4 @@ plt.ylim(1e-2,1e2)
 plt.show()
 
 
-
+"""
