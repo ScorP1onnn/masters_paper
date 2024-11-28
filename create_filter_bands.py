@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import interferopy.tools as tools
 import astropy.units as u
+from matplotlib.pyplot import tight_layout
+
 import utils as utils
 from utils import ghz_to_mum
 
@@ -56,7 +58,7 @@ def alma_filter(rest_freq,z,file_name,tuning_freq=[],middle_freq=0,alma_bandwidt
     #Wavelength in Observed Frame (or Sky frame)
     if plot == True:
 
-        fig,ax = plt.subplots(1,1)
+        fig,ax = plt.subplots(1,1,tight_layout=True)
 
         ax.plot(array_angstroms, transmission)
         ax.axvline(utils.ghz_to_mum(central_freq) *1e4, color='black',ls='--',label=f'freq_central = {central_freq} GHz')
@@ -68,6 +70,8 @@ def alma_filter(rest_freq,z,file_name,tuning_freq=[],middle_freq=0,alma_bandwidt
         ax_freq.plot(array_GHz,transmission)
         ax_freq.invert_xaxis()
         ax_freq.set_xlabel('Observed Frequency [GHz]')
+
+        plt.title(f"{file_name}")
         plt.show()
 
         """
@@ -97,3 +101,8 @@ file = 'hashimoto_j2310'
 alma_filter(rest_freq=restfreq,z=z_j2310,file_name=file,tuning_freq=[483.19,486.31],plot=True)
 
 
+#Sala et al. 2024
+restfreq = 2437.3370569 #for rest wavelength of 123microns
+z_j2054=6.0391
+file_salak = 'salak_j2054'
+alma_filter(rest_freq=restfreq,z=z_j2054,file_name=file_salak,tuning_freq=[344.2,346.1],alma_bandwidth=8,bin=35,plot=True)
