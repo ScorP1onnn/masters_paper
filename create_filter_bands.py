@@ -124,7 +124,7 @@ def alma_filter(file_name,rest_freq=0.,z=0.,tuning_freq=[],middle_freq=0.,alma_b
 
 
 
-
+"""
 #Hashimoto et al. 2019
 restfreq = 3393.006244
 z_j2054=6.0391
@@ -168,7 +168,7 @@ alma_filter(file_name=file_tripodi_2024_488,middle_freq=obs_freq_488,bin=50,plot
 obs_freq_674 = 674.97
 file_tripodi_2024_674 = 'tripodi_2024_674_GHz'
 alma_filter(file_name=file_tripodi_2024_674,middle_freq=obs_freq_674,bin=50,plot=True)
-
+"""
 
 
 #J2054-0005
@@ -180,18 +180,18 @@ flux = [[0.00174,0.000352]]
 header = ("#id redshift "
           "sdss.ip sdss.ip_err"
           "WISE1 WISE1_err "
-          "herschel_pacs_100 herschel_pacs_100_err"
-          "herschel_pacs_160 herschel_pacs_160_err"
-          "herschel_spire_psw herschel_spire_psw_err"
-          "herschel_spire_pmw herschel_spire_pmw_err"
-          "IRAM_MAMBO2.250GHz IRAM_MAMBO2.250GHz_err"
-          "hashimoto_j2054 hashimoto_j2054_err"
-          "salak_j2054 salak_j2054_err"
-          "tripodi_2024_92_GHz tripodi_2024_92_GHz_err"
-          "tripodi_2024_262_GHz tripodi_2024_262_GHz_err"
-          "tripodi_2024_263_GHz tripodi_2024_263_GHz_err"
-          "tripodi_2024_488_GHz tripodi_2024_488_GHz_err"
-          "tripodi_2024_674_GHz tripodi_2024_674_GHz_err"
+          "herschel_pacs_100 herschel_pacs_100_err "
+          "herschel_pacs_160 herschel_pacs_160_err "
+          "herschel_spire_psw herschel_spire_psw_err "
+          "herschel_spire_pmw herschel_spire_pmw_err "
+          "IRAM_MAMBO2.250GHz IRAM_MAMBO2.250GHz_err "
+          "hashimoto_j2054 hashimoto_j2054_err "
+          "salak_j2054 salak_j2054_err "
+          "tripodi_2024_92_GHz tripodi_2024_92_GHz_err "
+          "tripodi_2024_262_GHz tripodi_2024_262_GHz_err "
+          "tripodi_2024_263_GHz tripodi_2024_263_GHz_err "
+          "tripodi_2024_488_GHz tripodi_2024_488_GHz_err "
+          "tripodi_2024_674_GHz tripodi_2024_674_GHz_err "
           )
 
 data = ('J2054',6.0392,
@@ -210,3 +210,8 @@ data = ('J2054',6.0392,
         11.71, 0.11,
         9.87, 0.94
         )
+
+
+with open("/home/sai/source_data.txt", "w") as f:
+    f.write(header + "\n")
+    f.write(" ".join(map(str, data)) + "\n")
