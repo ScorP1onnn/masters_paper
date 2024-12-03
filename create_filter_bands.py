@@ -178,7 +178,7 @@ flux = [[0.00174,0.000352]]
 
 
 header = ("#id redshift "
-          "sdss.ip sdss.ip_err"
+          "sdss.ip sdss.ip_err "
           "WISE1 WISE1_err "
           "herschel_pacs_100 herschel_pacs_100_err "
           "herschel_pacs_160 herschel_pacs_160_err "
