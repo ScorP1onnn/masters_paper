@@ -8,7 +8,7 @@ import utils as utils
 import astropy.units as u
 
 
-exit()
+
 
 
 """
@@ -109,11 +109,18 @@ print(df.columns)
 
 df.drop([0,2,3,4,5,6],inplace=True) #Dropping Pan-STARRS1 Observations and K(keck)
 
+
 freq_ned = df['Frequency'].to_numpy()/1e9 #Convert Frequncies to GHz
 wave_ned = utils.ghz_to_mum(freq_ned) #Wavelength in micrometers
 flux_ned = df['Flux Density'].to_numpy()*1e3 #Convert to mJy
 flux_err_ned = df['Upper limit of uncertainty'].to_numpy()*1e3 #Convert to mJy
 references_ned = df['Refcode']
+
+#print(freq_ned)
+#print(wave_ned)
+print(flux_ned,flux_err_ned)
+#print(references_ned)
+
 
 
 
@@ -126,6 +133,8 @@ w1_freq = utils.mum_to_ghz(w1_wave)
 w1_mag = ufloat(18.017,0.337)
 #Convert mag to flux for WISE: https://wise2.ipac.caltech.edu/docs/release/allsky/expsup/sec4_4h.html#conv2flux
 w1_flux = (309.540* 10**((w1_mag)/-2.5)) * 1e3 #Flux in mJy
+
+print("WISE1 FLux = ", w1_flux)
 
 
 # Leipski et al. 2014 (https://iopscience.iop.org/article/10.1088/0004-637X/785/2/154/pdf)
@@ -185,7 +194,7 @@ plt.show()
 
 
 
-
+exit()
 
 
 

@@ -157,6 +157,10 @@ obs_freq_262 = 262.6 #Use it as middle freq
 file_tripodi_2024_262 = 'tripodi_2024_262_GHz'
 alma_filter(file_name=file_tripodi_2024_262,middle_freq=obs_freq_262,bin=50,plot=True)
 
+obs_freq_262 = 263.93 #Use it as middle freq
+file_tripodi_2024_262 = 'tripodi_2024_263_GHz'
+alma_filter(file_name=file_tripodi_2024_263,middle_freq=obs_freq_263,bin=50,plot=True)
+
 obs_freq_488 = 488.31
 file_tripodi_2024_488 = 'tripodi_2024_488_GHz'
 alma_filter(file_name=file_tripodi_2024_488,middle_freq=obs_freq_488,bin=50,plot=True)
@@ -165,3 +169,44 @@ obs_freq_674 = 674.97
 file_tripodi_2024_674 = 'tripodi_2024_674_GHz'
 alma_filter(file_name=file_tripodi_2024_674,middle_freq=obs_freq_674,bin=50,plot=True)
 
+
+
+#J2054-0005
+
+filters = [['sdss.ip', 'sdss.ip_err']]
+flux = [[0.00174,0.000352]]
+
+
+header = ("#id redshift "
+          "sdss.ip sdss.ip_err"
+          "WISE1 WISE1_err "
+          "herschel_pacs_100 herschel_pacs_100_err"
+          "herschel_pacs_160 herschel_pacs_160_err"
+          "herschel_spire_psw herschel_spire_psw_err"
+          "herschel_spire_pmw herschel_spire_pmw_err"
+          "IRAM_MAMBO2.250GHz IRAM_MAMBO2.250GHz_err"
+          "hashimoto_j2054 hashimoto_j2054_err"
+          "salak_j2054 salak_j2054_err"
+          "tripodi_2024_92_GHz tripodi_2024_92_GHz_err"
+          "tripodi_2024_262_GHz tripodi_2024_262_GHz_err"
+          "tripodi_2024_263_GHz tripodi_2024_263_GHz_err"
+          "tripodi_2024_488_GHz tripodi_2024_488_GHz_err"
+          "tripodi_2024_674_GHz tripodi_2024_674_GHz_err"
+          )
+
+data = ('J2054',6.0392,
+        0.00174,0.000352,
+        0.019,0.006,
+        3.1,1.0,
+        10.5,2.0,
+        15.2,5.4,
+        12.0,4.9,
+        2.38,0.53,
+        10.35,0.15,
+        5.723,0.009,
+        0.082,0.009,
+        2.93,0.07,
+        3.08, 0.03,
+        11.71, 0.11,
+        9.87, 0.94
+        )
