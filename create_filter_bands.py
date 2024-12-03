@@ -37,7 +37,7 @@ def alma_filter(file_name,rest_freq=0.,z=0.,tuning_freq=[],middle_freq=0.,alma_b
     array_angstroms = array_GHz.to(u.angstrom, equivalencies=u.spectral())
 
     transmission = np.zeros(len(array_angstroms))
-    transmission[1:-1] = transmission[1:-1] + 1
+    transmission[1:-1] = transmission[1:-1] + 1.000
 
     #print(array_GHz)
     #print(array_angstroms[0].value)
@@ -74,22 +74,19 @@ def alma_filter(file_name,rest_freq=0.,z=0.,tuning_freq=[],middle_freq=0.,alma_b
     array_GHz = (array_angstroms * u.angstrom).to(u.GHz, equivalencies=u.spectral())
 
 
-    # Wavelength in Angstroms in observed frame (or sky frame)
+
+    data = np.column_stack((array_angstroms[::-1], transmission))
+    comments = (
+        f"{file_name}",
+        "photon",
+        "boxcar shape filter"
+    )
+    header = "\n".join(comments)
+
     desktop_path = os.path.expanduser('~') + '/Desktop' + '/alma_iram_filters'
     file_path = os.path.join(desktop_path, file_name + '.dat')
-    file_1 = open(file_path, "w+")
-    file_1.write(f"# {file_name}\n# energy\n")
-    file_1.write(
-        f"# boxcar shape filter centered at {central_freq} GHz or {utils.ghz_to_mum(central_freq) * 1e4} Angstroms (or {np.round(utils.ghz_to_mum(central_freq), 2)} micrometer)")
-    for i in range(len(array_angstroms)):
-        file_1.write(f"\n")
-        file_1.write(f"{np.round(array_angstroms[i], 4)} {transmission[i]}")
-    file_1.close()
-    print(f"FILE {file_name + '.dat'} CREATED")
 
-
-
-
+    np.savetxt(file_path,data, fmt="%.6f", header=header, comments="# ")
 
 
     #Wavelength in Observed Frame (or Sky frame)
@@ -133,6 +130,8 @@ restfreq = 3393.006244
 z_j2054=6.0391
 file = 'hashimoto_j2054'
 alma_filter(rest_freq=restfreq,z=z_j2054,file_name=file,tuning_freq=[480.71,483.68],plot=True)
+
+exit()
 
 restfreq = 3393.006244
 z_j2310=6.0035
