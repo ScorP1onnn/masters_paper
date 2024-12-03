@@ -127,7 +127,7 @@ def alma_filter(file_name,rest_freq=0.,z=0.,tuning_freq=[],middle_freq=0.,alma_b
 
 
 
-"""
+
 #Hashimoto et al. 2019
 restfreq = 3393.006244
 z_j2054=6.0391
@@ -145,11 +145,24 @@ restfreq = 2437.3370569 #for rest wavelength of 123microns
 z_j2054=6.0391
 file_salak = 'salak_j2054'
 alma_filter(rest_freq=restfreq,z=z_j2054,file_name=file_salak,tuning_freq=[344.2,346.1],alma_bandwidth=8,bin=35,plot=True)
-"""
+
 
 
 #Tripodi et al. 2024
 obs_freq_92 = 92.26 #Use it as middle freq
 file_tripodi_2024_92 = 'tripodi_2024_92_GHz'
 alma_filter(file_name=file_tripodi_2024_92,middle_freq=obs_freq_92,bin=50,plot=True)
+
+
+obs_freq_262 = 262.6 #Use it as middle freq
+file_tripodi_2024_262 = 'tripodi_2024_262_GHz'
+alma_filter(file_name=file_tripodi_2024_262,middle_freq=obs_freq_262,bin=50,plot=True)
+
+obs_freq_488 = 488.31
+file_tripodi_2024_488 = 'tripodi_2024_488_GHz'
+alma_filter(file_name=file_tripodi_2024_488,middle_freq=obs_freq_488,bin=50,plot=True)
+
+obs_freq_674 = 674.97
+file_tripodi_2024_674 = 'tripodi_2024_674_GHz'
+alma_filter(file_name=file_tripodi_2024_674,middle_freq=obs_freq_674,bin=50,plot=True)
 
