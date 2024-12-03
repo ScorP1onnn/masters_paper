@@ -212,6 +212,6 @@ data = ('J2054-0005',6.0392,
         )
 
 
-with open("/home/sai/source_data.txt", "w") as f:
+with open("/home/sai/J2054_cigale.txt", "w") as f:
     f.write(header + "\n")
     f.write(" ".join(map(str, data)) + "\n")
