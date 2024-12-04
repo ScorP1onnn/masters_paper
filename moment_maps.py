@@ -1,3 +1,10 @@
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import ImageGrid
+from matplotlib.patches import Ellipse
+import numpy as np
+from interferopy.cube import Cube
+from matplotlib import colors
+
 
 def map_all(nii_smg,cont_smg,coord_smg,name_smg):
 
@@ -126,6 +133,8 @@ def map_all(nii_smg,cont_smg,coord_smg,name_smg):
     axim = ax.imshow(subim.T, origin='lower', cmap="PuOr_r", zorder=-1, norm=n, extent=extent)
 
     rms = cub.rms[0] * scale
+    ax.contour(subim.T, extent=extent, colors="red", levels=np.array([1]) * rms, zorder=1,
+               linewidths=0.5, linestyles="-")
     ax.contour(subim.T, extent=extent, colors="black", levels=np.array([2, 4, 6, 8, 16, 32]) * rms, zorder=1,
                linewidths=0.5, linestyles="-")
     ax.contour(subim.T, extent=extent, colors="gray", levels=np.array([-32, -16, -8, -4, -2]) * rms, zorder=1,
@@ -327,6 +336,7 @@ def map1(nii_smg,cont_smg,coord_smg,name_smg):
     axim = ax1.imshow(subim.T, origin='lower', cmap="PuOr_r", zorder=-1, norm=n, extent=extent)
 
     rms = cub.rms[0] * scale
+
     ax1.contour(subim.T, extent=extent, colors="black", levels=np.array([2, 4, 6, 8, 16, 32]) * rms, zorder=1,linewidths=0.5, linestyles="-")
     ax1.contour(subim.T, extent=extent, colors="gray", levels=np.array([-32, -16, -8, -4, -2]) * rms, zorder=1,linewidths=0.5, linestyles="--")
 
@@ -373,6 +383,7 @@ def map1(nii_smg,cont_smg,coord_smg,name_smg):
     axim = ax2.imshow(subim.T, origin='lower', cmap="PuOr_r", zorder=-1, norm=n, extent=extent)
 
     rms = cub.rms[0] * scale
+
     ax2.contour(subim.T, extent=extent, colors="black", levels=np.array([2, 4, 6, 8, 16, 32]) * rms, zorder=1,linewidths=0.5, linestyles="-")
     ax2.contour(subim.T, extent=extent, colors="gray", levels=np.array([-32, -16, -8, -4, -2]) * rms, zorder=1,linewidths=0.5, linestyles="--")
 
@@ -474,8 +485,9 @@ def map1(nii_smg,cont_smg,coord_smg,name_smg):
     axim = ax4.imshow(subim.T, origin='lower', cmap="PuOr_r", zorder=-1, norm=n, extent=extent)
 
     rms = cub.rms[0] * scale
-    ax4.contour(subim.T, extent=extent, colors="black", levels=np.array([2, 4, 6, 8, 16, 32]) * rms, zorder=1,
+    ax4.contour(subim.T, extent=extent, colors="red", levels=np.array([1]) * rms, zorder=1,
                 linewidths=0.5, linestyles="-")
+    ax4.contour(subim.T, extent=extent, colors="black", levels=np.array([4, 6, 8, 16, 32]) * rms, zorder=1,linewidths=0.5, linestyles="-")
     ax4.contour(subim.T, extent=extent, colors="gray", levels=np.array([-32, -16, -8, -4, -2]) * rms, zorder=1,
                 linewidths=0.5, linestyles="--")
 
@@ -524,7 +536,9 @@ def map1(nii_smg,cont_smg,coord_smg,name_smg):
     axim = ax5.imshow(subim.T, origin='lower', cmap="PuOr_r", zorder=-1, norm=n, extent=extent)
 
     rms = cub.rms[0] * scale
-    ax5.contour(subim.T, extent=extent, colors="black", levels=np.array([2, 4, 6, 8, 16, 32]) * rms, zorder=1,
+    ax5.contour(subim.T, extent=extent, colors="red", levels=np.array([1]) * rms, zorder=1,
+                linewidths=0.5, linestyles="-")
+    ax5.contour(subim.T, extent=extent, colors="black", levels=np.array([4, 6, 8, 16, 32]) * rms, zorder=1,
                 linewidths=0.5, linestyles="-")
     ax5.contour(subim.T, extent=extent, colors="gray", levels=np.array([-32, -16, -8, -4, -2]) * rms, zorder=1,
                 linewidths=0.5, linestyles="--")
@@ -577,7 +591,9 @@ def map1(nii_smg,cont_smg,coord_smg,name_smg):
     axim = ax6.imshow(subim.T, origin='lower', cmap="PuOr_r", zorder=-1, norm=n, extent=extent)
 
     rms = cub.rms[0] * scale
-    ax6.contour(subim.T, extent=extent, colors="black", levels=np.array([2, 4, 6, 8, 16, 32]) * rms, zorder=1,
+    ax6.contour(subim.T, extent=extent, colors="red", levels=np.array([1]) * rms, zorder=1,
+                linewidths=0.5, linestyles="-")
+    ax6.contour(subim.T, extent=extent, colors="black", levels=np.array([ 4, 6, 8, 16, 32]) * rms, zorder=1,
                 linewidths=0.5, linestyles="-")
     ax6.contour(subim.T, extent=extent, colors="gray", levels=np.array([-32, -16, -8, -4, -2]) * rms, zorder=1,
                 linewidths=0.5, linestyles="--")
@@ -634,7 +650,7 @@ name_qso = ["PSSJ2322+1944","J2054+0005","J2310+1855"]
 
 #map_all(nii_smg,cont_smg,coord_smg,name_smg)
 map1(nii_smg,cont_smg,coord_smg,name_smg)
-#map1(nii_qso,cont_qso,coord_qso,name_qso)
+map1(nii_qso,cont_qso,coord_qso,name_qso)
 
 exit()
 
