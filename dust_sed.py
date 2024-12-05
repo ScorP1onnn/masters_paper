@@ -147,20 +147,28 @@ leipski_freq = utils.mum_to_ghz(leipski_wave)
 leipski_flux = np.array([3.1,10.5,15.2,12.0]) #Flux in mJy
 leipski_flux_err = np.array([1.0,2.0,5.4,4.9]) #Flux in mJy
 
-
+"""
 #Wang et al. 2011, Wang et al. 2008, Tripodi et al 2024,
 
 wwt_freq = np.array([1.4,92.26,250, 262.6, 263.93, 488.31 , 674.97])
 wwt_wave = utils.ghz_to_mum(wwt_freq)
 wwt_flux = np.array([17e-3, 0.082, 2.38,2.93,3.08,11.71,9.87]) #Flux in mJy
 wwt_flux_err = np.array([23e-3,0.009,0.53,0.07,0.03,0.11,0.94]) #Flux in mJy
+"""
 
+#Wang et al. 2011, Wang et al. 2008, Tripodi et al 2024,
+
+wwt_freq = np.array([1.4,92.26,250, 262.6, 263.93, 674.97])
+wwt_wave = utils.ghz_to_mum(wwt_freq)
+wwt_flux = np.array([17e-3, 0.082, 2.38,2.93,3.08,9.87]) #Flux in mJy
+wwt_flux_err = np.array([23e-3,0.009,0.53,0.07,0.03,0.94]) #Flux in mJy
 
 #Hashimoto et al. 2018 (https://arxiv.org/pdf/1811.00030)
 #Our data probe dust continuum emission at the rest-frame wavelength, λ_rest, of ≈ 87 μm
 hash_wave = np.array([87*(1+6.0391)]) #In micrometers
 has_freq = utils.mum_to_ghz(hash_wave)
 hash_flux = ufloat(10.35,0.15) #Flux in mJy
+
 
 
 #Salak et al. 2024 (https://iopscience.iop.org/article/10.3847/1538-4357/ad0df5/pdf)

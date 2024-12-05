@@ -235,7 +235,6 @@ header = ("#id redshift "
           "tripodi_2024_92_GHz tripodi_2024_92_GHz_err "
           "tripodi_2024_262_GHz tripodi_2024_262_GHz_err "
           "tripodi_2024_263_GHz tripodi_2024_263_GHz_err "
-          "tripodi_2024_488_GHz tripodi_2024_488_GHz_err "
           "tripodi_2024_674_GHz tripodi_2024_674_GHz_err "
           )
 
@@ -251,7 +250,6 @@ data = ('J2054-0005',6.0392,
         0.082,0.009,
         2.93,0.07,
         3.08, 0.03,
-        11.71, 0.11,
         9.87, 0.94
         )
 

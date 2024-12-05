@@ -650,7 +650,7 @@ name_qso = ["PSSJ2322+1944","J2054+0005","J2310+1855"]
 
 #map_all(nii_smg,cont_smg,coord_smg,name_smg)
 map1(nii_smg,cont_smg,coord_smg,name_smg)
-map1(nii_qso,cont_qso,coord_qso,name_qso)
+#map1(nii_qso,cont_qso,coord_qso,name_qso)
 
 exit()
 
