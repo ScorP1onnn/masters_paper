@@ -95,15 +95,18 @@ def spectrum(path):
     return np.asarray(vel),np.asarray(freq),np.asarray(flux)
 
 
+def mean_spectrum_err(err):
+    cal_err = 0.15 #15% Calibration Error
+    return np.sqrt((err**2) + (err*cal_err)**2)
 
 
-vel_gn20,freq_gn20,flux_gn20 = spectrum("/home/sai/saimurali/veb2-gn20.dat")
-vel_id141,freq_id141,flux_id141 = spectrum("/home/sai/saimurali/vcb2-id141.dat")
-vel_hdf,freq_hdf,flux_hdf = spectrum("/home/sai/saimurali/vdb2-hdf850.dat")
+vel_gn20,freq_gn20,flux_gn20 = spectrum("saimurali/veb2-gn20.dat")
+vel_id141,freq_id141,flux_id141 = spectrum("saimurali/vcb2-id141.dat")
+vel_hdf,freq_hdf,flux_hdf = spectrum("saimurali/vdb2-hdf850.dat")
 
-vel_2322,freq_2322,flux_2322 = spectrum("/home/sai/saimurali/vbb2-wbb7-2322.dat")
-vel_2054,freq_2054,flux_2054 = spectrum("/home/sai/saimurali/w16ef002-2054.dat")
-vel_2310,freq_2310,flux_2310 = spectrum("/home/sai/saimurali/w16ef001-2310.dat")
+vel_2322,freq_2322,flux_2322 = spectrum("saimurali/vbb2-wbb7-2322.dat")
+vel_2054,freq_2054,flux_2054 = spectrum("saimurali/w16ef002-2054.dat")
+vel_2310,freq_2310,flux_2310 = spectrum("saimurali/w16ef001-2310.dat")
 
 
 gm =Model(guass)
@@ -128,6 +131,11 @@ plt.xlabel("Velocity")
 plt.ylabel("Flux [mJy]")
 plt.show()"""
 
+err = 1.4
+print(err + (0.15*err))
+print(mean_spectrum_err(err))
+
+exit()
 
 
 

@@ -107,7 +107,7 @@ print(df.columns)
 
 #df.drop([0,2,4,6],inplace=True) #Dropping Pan-STARRS1 Observations and K(keck)
 
-df.drop([0,2,3,4,5,6],inplace=True) #Dropping Pan-STARRS1 Observations and K(keck)
+df.drop([0,2,4,5,6],inplace=True) #Dropping Pan-STARRS1 Observations and K(keck)
 
 
 freq_ned = df['Frequency'].to_numpy()/1e9 #Convert Frequncies to GHz
@@ -116,9 +116,12 @@ flux_ned = df['Flux Density'].to_numpy()*1e3 #Convert to mJy
 flux_err_ned = df['Upper limit of uncertainty'].to_numpy()*1e3 #Convert to mJy
 references_ned = df['Refcode']
 
+
+print(df[['Observed Passband','Photometry Measurement','Uncertainty','Flux Density']])
 #print(freq_ned)
 #print(wave_ned)
-print(flux_ned,flux_err_ned)
+print(ufloat(flux_ned[0],flux_err_ned[0]))
+print(ufloat(flux_ned[1],flux_err_ned[1]))
 #print(references_ned)
 
 
