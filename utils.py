@@ -16,20 +16,32 @@ def mum_to_ghz(wavelength_um):
     return (const.c/(wavelength_um / 1e6))/1e9
 
 
-def mass_kgs_solar_conversion(mass,unit_of_input_mass):
+def mass_kgs_solar_conversion(mass,unit_of_input_mass,power=False):
     # 1 solar mass in kilograms
     solar_mass_kg = 1.989e+30 #Solar mass in kg
 
     if unit_of_input_mass == 'kg' or unit_of_input_mass == 'kgs':
         print("Converting mass from kg to solar masses")
-        return mass / solar_mass_kg # Convert kg to solar masses
+        m = mass / solar_mass_kg  # Convert kg to solar masses
+        if power==False:
+            return m
+        else:
+            print(m/1e8,'x10^8')
+            return m
+
 
     elif unit_of_input_mass == 'solar':
         print("Converting mass from solar masses to kg")
-        return mass * solar_mass_kg #Convert solar masses to kg
+        m = mass * solar_mass_kg
+        return m
+
 
     else:
         raise ValueError("Invalid target unit. Use 'solar' for solar masses or 'kg' for kilograms.")
+
+
+def log10_of_error(value,err):
+    return err/(value*np.log(10))
 
 
 def luminosity_distance(x,H_0=70,W_M=0.3):
