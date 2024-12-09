@@ -2,6 +2,7 @@ from csv import unix_dialect
 
 import numpy as np
 import pandas as pd
+import pylab as pl
 from scipy.optimize import curve_fit
 import interferopy.tools as iftools #(uses only numpy versions 1.x not 2.x)
 import matplotlib.pyplot as plt
@@ -41,6 +42,7 @@ plt.ylabel("Flux Density [mJy]")
 plt.show()
 """
 
+#https://arxiv.org/pdf/1206.2641
 walter_freq = np.array([307.383,111.835,37.286])
 walter_flux = np.array([6.8,0.13,30e-3])
 walter_flux_err = np.array([0.8,0.3,np.nan])
@@ -224,6 +226,7 @@ print()
 
 #ID141
 
+#https://iopscience.iop.org/article/10.1088/0004-637X/740/2/63/pdf
 id141_wave = np.array([250,350,500,870,880,1200,1950,2750,3000,3290])
 id141_flux = np.array([115,192,204,102,90,36,9.7,1.8,1.6,1.2])
 id141_flux_err = np.array([19,30,32,8.8,5,2,0.9,0.3,0.2,0.1])
@@ -324,3 +327,97 @@ iftools.dust_cont_integrate(dust_mass=result_id141.params["mass_dust"].value,dus
 print(np.log10(71.2e12))
 #ID141 Values are well within the errors
 
+
+########################################################################################################################
+
+#Literature values for GN20
+
+gn20_wave_mum = np.array([100,160,250,350,500,850,880,1100,2200,3300,3050,1860])
+gn20_flux = np.array([0.7,5.4,18.6,41.3,39.7,20.3,16,10.7,0.9,0.33,0.36,2.8])
+gn20_flux_err = np.array([0.4,1.0,2.7,5.2,6.1,2.0,1.0,1.0,0.15,0.06,0.05,0.13])
+gn20_freq = utils.mum_to_ghz(gn20_wave_mum)
+
+my_value_gn20_freq = np.array([1461.134/(1+4.0553)])
+my_value_gn20_flux = np.array([16.2])
+my_value_gn20_flux_err = np.array([2.5])
+my_value_gn20_wave_mum = utils.ghz_to_mum(my_value_gn20_freq)
+
+plt.scatter(gn20_wave_mum,gn20_flux)
+plt.scatter(my_value_gn20_wave_mum,my_value_gn20_flux,color='red')
+
+plt.xlim(1e1,1e4)
+plt.ylim(1e-4, 10**3)
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel(r"Observed Wavelength [$\mu$m]")
+plt.ylabel("Flux Density [mJy]")
+plt.legend()
+plt.title("GN20")
+plt.show()
+
+
+#Optically Thin Scenario
+
+gn20_freq_hz = np.concatenate([gn20_freq,my_value_gn20_freq]) * 1e9 #Convert to Hz
+gn20_flux = np.concatenate([gn20_flux,my_value_gn20_flux]) * 1e-29 #Convert to to W/Hz/m2
+gn20_flux_err = np.concatenate([gn20_flux_err,my_value_gn20_flux_err]) * 1e-29 #Convert to to W/Hz/m2
+gn20_wave_mum = np.concatenate([gn20_wave_mum,my_value_gn20_wave_mum])
+
+gm_gn20 = Model(iftools.dust_sobs)
+
+params = gm.make_params(
+    z=4.0553,  # Example value for z
+    mass_dust=1e39,  # Initial guess for dust_mass
+    temp_dust=35.0,  # Example value for dust_temp
+    beta=1.9  # Example value for beta
+)
+
+# Fix the parameters you don't want to vary
+params["z"].vary = False
+#params["temp_dust"].vary = False
+params["beta"].vary = False
+
+# Include weights (1/errors)
+weights = 1/gn20_flux_err
+
+
+result_gn20 = gm.fit(gn20_flux, params, nu_obs=gn20_freq_hz, weights=weights)
+print(result_gn20.fit_report())
+
+wave = np.linspace(1e1,1e4,10000)
+s_gn20 = iftools.dust_sobs(nu_obs=utils.mum_to_ghz(wave)*1e9,
+                            z = 4.0553,
+                            mass_dust=result_gn20.params["mass_dust"].value,
+                            temp_dust=result_gn20.params["temp_dust"].value,
+                            beta=1.9) *  1e26 * 1e3 #mJy
+
+
+plt.scatter(gn20_wave_mum,gn20_flux*1e29)
+plt.scatter(my_value_gn20_wave_mum,my_value_gn20_flux,color='red')
+plt.plot(wave,s_gn20)
+
+plt.xlim(1e1,1e4)
+plt.ylim(1e-4, 10**3)
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel(r"Observed Wavelength [$\mu$m]")
+plt.ylabel("Flux Density [mJy]")
+plt.legend()
+plt.title("GN20 lmfit fit")
+plt.show()
+
+print("")
+dust_mass_solar_gn20 = ufloat(utils.mass_kgs_solar_conversion(result_gn20.params["mass_dust"].value,unit_of_input_mass='kg'),
+                               utils.mass_kgs_solar_conversion(result_gn20.params["mass_dust"].stderr,unit_of_input_mass='kg'))
+
+
+
+print("GN20 log(Dust mass) = ",np.round(np.log10(dust_mass_solar_gn20.n),2),"+/-",np.round(utils.log10_of_error(dust_mass_solar_gn20.n,dust_mass_solar_gn20.s),2))
+print("GN20 Dust Temperature (K) = ",np.round(result_gn20.params["temp_dust"].value,2), "+/-", np.round(result_gn20.params["temp_dust"].stderr,2))
+print()
+
+iftools.dust_cont_integrate(dust_mass=result_gn20.params["mass_dust"].value,dust_temp=result_gn20.params["temp_dust"].value,
+                            dust_beta = 1.9,print_to_console=True)
+
+print("")
+print(np.log10(15.4e12))
