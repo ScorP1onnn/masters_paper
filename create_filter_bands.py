@@ -83,7 +83,7 @@ def alma_filter(file_name,rest_freq=0.,z=0.,tuning_freq=[],middle_freq=0.,alma_b
     )
     header = "\n".join(comments)
 
-    desktop_path = os.path.expanduser('~') + '/Desktop' + '/alma_iram_filters' + '/j2054'
+    desktop_path = os.path.expanduser('~') + '/Desktop' + '/alma_iram_filters' + '/j2310'
     file_path = os.path.join(desktop_path, file_name + '.dat')
 
     np.savetxt(file_path,data, fmt="%.6f", header=header, comments="# ")
@@ -170,91 +170,163 @@ file_tripodi_2024_674 = 'tripodi_2024_674_GHz'
 alma_filter(file_name=file_tripodi_2024_674,middle_freq=obs_freq_674,bin=50,plot=True)
 
 
+#J2054-0005
+header = ("#id redshift "
+          "WISE1 WISE1_err "
+          "herschel.pacs.100 herschel.pacs.100_err "
+          "herschel.pacs.160 herschel.pacs.160_err "
+          "herschel.spire.PSW herschel.spire.PSW_err "
+          "herschel.spire.PMW herschel.spire.PMW_err "
+          "IRAM_MAMBO2.250GHz IRAM_MAMBO2.250GHz_err "
+          "hashimoto_j2054 hashimoto_j2054_err "
+          "salak_j2054 salak_j2054_err "
+          "tripodi_2024_92_GHz tripodi_2024_92_GHz_err "
+          "tripodi_2024_262_GHz tripodi_2024_262_GHz_err "
+          "tripodi_2024_263_GHz tripodi_2024_263_GHz_err "
+          "tripodi_2024_674_GHz tripodi_2024_674_GHz_err "
+          )
+
+data = ('J2054-0005',6.0392,
+        0.019,0.006,
+        3.1,1.0,
+        10.5,2.0,
+        15.2,5.4,
+        12.0,4.9,
+        2.38,0.53,
+        10.35,0.15,
+        5.723,0.009,
+        0.082,0.009,
+        2.93,0.07,
+        3.08, 0.03,
+        9.87, 0.94
+        )
+
+
+with open("/home/sai/Desktop/cigale_trail/j2054/J2054_cigale.txt", "w") as f:
+    f.write(header + "\n")
+    f.write(" ".join(map(str, data)) + "\n")
+
+
+
 exit()
 """
 
+#J2310+1855
+restfreq = 3393.006244
+z_j2310=6.0035
+file = 'j2310_hashimoto'
+alma_filter(rest_freq=restfreq,z=z_j2310,file_name=file,tuning_freq=[483.19,486.31],plot=True)
 
 
-#J2054-0005
+#Wang et al. 2008 (250 MAMBO-II)
+obs_freq_99 = 99
+file_wang_2008_99 = 'j2310_wang_2008_99_GHz'
+alma_filter(file_name=file_wang_2008_99,middle_freq=obs_freq_99,alma_bandwidth=8,bin=50,plot=True)
 
-filters = [['sdss.ip', 'sdss.ip_err']]
-flux = [[0.00174,0.000352]]
-"""
-#Including SDSS
+
+
+#Tripodi et al. 2022
+
+obs_freq_91 = 91.5 #Use it as middle freq
+file_tripodi_2022_91 = 'j2310_tripodi_2022_91_GHz'
+alma_filter(file_name=file_tripodi_2022_91,middle_freq=obs_freq_91,bin=50,plot=True)
+
+obs_freq_136 = 136.627 #Use it as middle freq
+file_tripodi_2022_136 = 'j2310_tripodi_2022_136_GHz'
+alma_filter(file_name=file_tripodi_2022_136,middle_freq=obs_freq_136,bin=50,plot=True)
+
+obs_freq_140 = 140.995 #Use it as middle freq
+file_tripodi_2022_140 = 'j2310_tripodi_2022_140_GHz'
+alma_filter(file_name=file_tripodi_2022_140,middle_freq=obs_freq_140,bin=50,plot=True)
+
+obs_freq_153 = 153.07 #Use it as middle freq
+file_tripodi_2022_153 = 'j2310_tripodi_2022_153_GHz'
+alma_filter(file_name=file_tripodi_2022_153,middle_freq=obs_freq_153,bin=50,plot=True)
+
+obs_freq_263 = 263.315 #Use it as middle freq
+file_tripodi_2022_263 = 'j2310_tripodi_2022_263_GHz'
+alma_filter(file_name=file_tripodi_2022_263,middle_freq=obs_freq_263,bin=50,plot=True)
+
+obs_freq_265 = 265.369 #Use it as middle freq
+file_tripodi_2022_265 = 'j2310_tripodi_2022_265_GHz'
+alma_filter(file_name=file_tripodi_2022_265,middle_freq=obs_freq_265,bin=50,plot=True)
+
+obs_freq_284 = 284.988 #Use it as middle freq
+file_tripodi_2022_284 = 'j2310_tripodi_2022_284_GHz'
+alma_filter(file_name=file_tripodi_2022_284,middle_freq=obs_freq_284,bin=50,plot=True)
+
+obs_freq_289 = 289.18 #Use it as middle freq
+file_tripodi_2022_289 = 'j2310_tripodi_2022_289_GHz'
+alma_filter(file_name=file_tripodi_2022_289,middle_freq=obs_freq_289,bin=50,plot=True)
+
+obs_freq_344 = 344.185 #Use it as middle freq
+file_tripodi_2022_344 = 'j2310_tripodi_2022_344_GHz'
+alma_filter(file_name=file_tripodi_2022_344,middle_freq=obs_freq_344,bin=50,plot=True)
+
+obs_freq_490 = 490.787 #Use it as middle freq
+file_tripodi_2022_490 = 'j2310_tripodi_2022_490_GHz'
+alma_filter(file_name=file_tripodi_2022_490,middle_freq=obs_freq_490,bin=50,plot=True)
+
+
 header = ("#id redshift "
-          "sdss.ip sdss.ip_err "
           "WISE1 WISE1_err "
+          "WISE2 WISE2_err "
+          "WISE3 WISE3_err "
           "herschel.pacs.100 herschel.pacs.100_err "
           "herschel.pacs.160 herschel.pacs.160_err "
           "herschel.spire.PSW herschel.spire.PSW_err "
           "herschel.spire.PMW herschel.spire.PMW_err "
+          "j2310_hashimoto j2310_hashimoto_err "
           "IRAM_MAMBO2.250GHz IRAM_MAMBO2.250GHz_err "
-          "hashimoto_j2054 hashimoto_j2054_err "
-          "salak_j2054 salak_j2054_err "
-          "tripodi_2024_92_GHz tripodi_2024_92_GHz_err "
-          "tripodi_2024_262_GHz tripodi_2024_262_GHz_err "
-          "tripodi_2024_263_GHz tripodi_2024_263_GHz_err "
-          "tripodi_2024_488_GHz tripodi_2024_488_GHz_err "
-          "tripodi_2024_674_GHz tripodi_2024_674_GHz_err "
+          "j2310_wang_2008_99_GHz j2310_wang_2008_99_GHz_err "
+          "j2310_tripodi_2022_91_GHz j2310_tripodi_2022_91_GHz_err "
+          "j2310_tripodi_2022_136_GHz j2310_tripodi_2022_136_GHz_err "
+          "j2310_tripodi_2022_140_GHz j2310_tripodi_2022_140_GHz_err "
+          "j2310_tripodi_2022_153_GHz j2310_tripodi_2022_153_GHz_err "
+          "j2310_tripodi_2022_263_GHz j2310_tripodi_2022_263_GHz_err "
+          "j2310_tripodi_2022_265_GHz j2310_tripodi_2022_265_GHz_err "
+          "j2310_tripodi_2022_284_GHz j2310_tripodi_2022_284_GHz_err "
+          "j2310_tripodi_2022_289_GHz j2310_tripodi_2022_289_GHz_err "
+          "j2310_tripodi_2022_344_GHz j2310_tripodi_2022_344_GHz_err "
+          "j2310_tripodi_2022_490_GHz j2310_tripodi_2022_490_GHz_err "
           )
 
-data = ('J2054-0005',6.0392,
-        0.00174,0.000352,
-        0.019,0.006,
-        3.1,1.0,
-        10.5,2.0,
-        15.2,5.4,
-        12.0,4.9,
-        2.38,0.53,
-        10.35,0.15,
-        5.723,0.009,
-        0.082,0.009,
-        2.93,0.07,
-        3.08, 0.03,
-        11.71, 0.11,
-        9.87, 0.94
+
+data = ('J2310-1855',6.0035,
+        0.1382,0.0023,
+        0.130,0.005,
+        0.39,0.16,
+        6.5,1.2,
+        13.2,2.8,
+        19.9,6.0,
+        22.0,6.9,
+        24.89,0.21,
+        8.29,0.63,
+        0.4,0.05,
+        0.29,0.01,
+        1.29,0.03,
+        1.40,0.02,
+        1.63,0.06,
+        7.73,0.31,
+        8.81,0.13,
+        11.05,0.16,
+        11.77,0.12,
+        14.63,0.34,
+        25.31,0.19
         )
 
 
-with open("/home/sai/Desktop/cigale_trail/j2054/J2054_cigale.txt", "w") as f:
+
+with open("/home/sai/Desktop/cigale_trail/j2310/J2310_cigale.txt", "w") as f:
     f.write(header + "\n")
     f.write(" ".join(map(str, data)) + "\n")
-    
-    
+
+
+
 """
-
-header = ("#id redshift "
-          "WISE1 WISE1_err "
-          "herschel.pacs.100 herschel.pacs.100_err "
-          "herschel.pacs.160 herschel.pacs.160_err "
-          "herschel.spire.PSW herschel.spire.PSW_err "
-          "herschel.spire.PMW herschel.spire.PMW_err "
-          "IRAM_MAMBO2.250GHz IRAM_MAMBO2.250GHz_err "
-          "hashimoto_j2054 hashimoto_j2054_err "
-          "salak_j2054 salak_j2054_err "
-          "tripodi_2024_92_GHz tripodi_2024_92_GHz_err "
-          "tripodi_2024_262_GHz tripodi_2024_262_GHz_err "
-          "tripodi_2024_263_GHz tripodi_2024_263_GHz_err "
-          "tripodi_2024_674_GHz tripodi_2024_674_GHz_err "
-          )
-
-data = ('J2054-0005',6.0392,
-        0.019,0.006,
-        3.1,1.0,
-        10.5,2.0,
-        15.2,5.4,
-        12.0,4.9,
-        2.38,0.53,
-        10.35,0.15,
-        5.723,0.009,
-        0.082,0.009,
-        2.93,0.07,
-        3.08, 0.03,
-        9.87, 0.94
-        )
-
-
-with open("/home/sai/Desktop/cigale_trail/j2054/J2054_cigale.txt", "w") as f:
+with open("/home/sai/Desktop/alma_iram_filters/j2310/J2310_cigale.txt", "w") as f:
     f.write(header + "\n")
     f.write(" ".join(map(str, data)) + "\n")
 
+"""
+exit()

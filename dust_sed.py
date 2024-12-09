@@ -205,7 +205,7 @@ plt.show()
 
 
 
-exit()
+#exit()
 
 
 
@@ -254,6 +254,7 @@ wise_flux = np.array([W1_mjy.n,W2_mjy.n,W3_mjy.n])
 wise_flux_err = np.array([W1_mjy.s,W2_mjy.s,W3_mjy.s])
 
 print(W1_mjy,W2_mjy,W3_mjy)
+#exit()
 
 
 #Wang et al. 2008
@@ -334,7 +335,7 @@ plt.show()
 
 
 
-
+exit()
 ##################################################################################################
 
 
