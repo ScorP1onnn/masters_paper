@@ -9,9 +9,10 @@ import astropy.units as u
 from matplotlib.pyplot import tight_layout
 
 import utils as utils
-from utils import ghz_to_mum
+from utils import ghz_to_mum, mum_to_ghz
 
 
+#ALMA,
 def alma_filter(file_name,rest_freq=0.,z=0.,tuning_freq=[],middle_freq=0.,alma_bandwidth=7.5,bin=30.,plot=False):
 
 
@@ -83,7 +84,7 @@ def alma_filter(file_name,rest_freq=0.,z=0.,tuning_freq=[],middle_freq=0.,alma_b
     )
     header = "\n".join(comments)
 
-    desktop_path = os.path.expanduser('~') + '/Desktop' + '/alma_iram_filters' + '/j2310'
+    desktop_path = os.path.expanduser('~') + '/Desktop' + '/alma_iram_filters' + '/pssj'
     file_path = os.path.join(desktop_path, file_name + '.dat')
 
     np.savetxt(file_path,data, fmt="%.6f", header=header, comments="# ")
@@ -211,6 +212,8 @@ with open("/home/sai/Desktop/cigale_trail/j2054/J2054_cigale.txt", "w") as f:
 exit()
 """
 
+
+"""
 #J2310+1855
 restfreq = 3393.006244
 z_j2310=6.0035
@@ -323,10 +326,97 @@ with open("/home/sai/Desktop/cigale_trail/j2310/J2310_cigale.txt", "w") as f:
 
 
 
+
+exit()
+
 """
-with open("/home/sai/Desktop/alma_iram_filters/j2310/J2310_cigale.txt", "w") as f:
+#PSSJ2322+1944
+
+pssj_freq_ghz = np.array([90,96,201.78,225,231,350,mum_to_ghz(450),mum_to_ghz(350),1875,4300]) #All obs freq
+pssj_freq_wave = mum_to_ghz(pssj_freq_ghz)
+pssj_flux = np.array([0.4, 0.31,5.79,7.5,9.6,22.5,75,79,0.0434e3,0.0137e3])
+pssj_flux_err = np.array([0.25,0.08,0.77,1.3,0.5,2.5,19,11, 0.0084e3,0.0061e3])
+
+print(pssj_freq_wave)
+
+plt.scatter(pssj_freq_wave,pssj_flux)
+plt.scatter(ghz_to_mum(np.array([1.4,5])),[9.8e-2,9e-2])
+plt.xlim(1e1,1e6)
+plt.ylim(1e-4, 10**3)
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel(r"Observed Wavelength [$\mu$m]")
+plt.ylabel("Flux Density [mJy]")
+plt.show()
+plt.show()
+
+
+
+
+#Carilli et al. 2001
+obs_freq_350 = 350. #Use it as middle freq
+file_carilli_2001_350_vla = 'pssj_carilli_2001_350_GHz'
+alma_filter(file_name=file_carilli_2001_350_vla,middle_freq=obs_freq_350,bin=50,plot=True)
+
+#Cox et al. 2002
+obs_freq_90 = 90. #Use it as middle freq
+file_cox_2002_90_pdbi = 'pssj_cox_2002_90_GHz'
+alma_filter(file_name=file_cox_2002_90_pdbi,middle_freq=obs_freq_90,alma_bandwidth=8,bin=50,plot=True)
+
+obs_freq_225 = 225. #Use it as middle freq
+file_cox_2002_225_pdbi = 'pssj_cox_2002_225_GHz'
+alma_filter(file_name=file_cox_2002_225_pdbi,middle_freq=obs_freq_225,alma_bandwidth=8,bin=50,plot=True)
+
+#Pety et al. 2004
+obs_freq_96 = 96. #Use it as middle freq
+file_pety_2004_96_pdbi = 'pssj_pety_2004_96_GHz'
+alma_filter(file_name=file_pety_2004_96_pdbi,middle_freq=obs_freq_96,alma_bandwidth=8,bin=50,plot=True)
+
+#Butler et al. 2023
+obs_freq_201 = 201.78
+file_butler_2023_201_alma = 'pssj_butler_2023_201_GHz'
+alma_filter(file_name=file_butler_2023_201_alma,middle_freq=obs_freq_201,bin=50,plot=True)
+
+
+
+#1875: herschel.pacs.100; 4300: herschel.pacs.70
+
+
+header = ("#id redshift "
+          "herschel.pacs.70 herschel.pacs.70_err "
+          "herschel.pacs.160 herschel.pacs.160_err "
+          "IRAM_MAMBO2.250GHz IRAM_MAMBO2.250GHz_err "
+          "SCUBA450 SCUBA450_err"
+          "pssj_carilli_2001_350_GHz pssj_carilli_2001_350_GHz_err "
+          "pssj_cox_2002_90_GHz pssj_cox_2002_90_GHz_err "
+          "pssj_cox_2002_225_GHz pssj_cox_2002_225_GHz_err "
+          "pssj_pety_2004_96_GHz pssj_pety_2004_96_GHz_err "
+          "pssj_butler_2023_201_GHz pssj_butler_2023_201_GHz_err "
+          )
+
+data = ('PSSJ2322+1944',4.12,
+        13.7, 6.1,
+        43.4, 8.4,
+        9.6, 0.5,
+        75.0, 19.0,
+        22.5, 2.5,
+        0.4, 0.25,
+        7.5, 1.3,
+        0.31, 0.08,
+        5.79, 0.77,
+        )
+
+"""
+with open("/home/sai/Desktop/alma_iram_filters/pssj/PSSJ_cigale.txt", "w") as f:
     f.write(header + "\n")
     f.write(" ".join(map(str, data)) + "\n")
 
 """
+
+
+with open("/home/sai/Desktop/cigale_trail/pssj/PSSJ_cigale.txt", "w") as f:
+    f.write(header + "\n")
+    f.write(" ".join(map(str, data)) + "\n")
+
+
 exit()
