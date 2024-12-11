@@ -187,8 +187,59 @@ hdf_flux = np.array([6.8,0.13,2.2,my_value_flux]) * 1e-29
 hdf_flux_err = np.array([0.8,0.3,0.3,my_value_flux_err]) * 1e-29
 hdf_wave_mum = utils.ghz_to_mum(hdf_freq_ghz/1e9)
 
+weights = 1 /hdf_flux_err
+
+gm = Model(iftools.dust_sobs)
+
+params = gm.make_params(
+    z=5.183,  # Example value for z
+    mass_dust=utils.mass_kgs_solar_conversion(2.5e8,unit_of_input_mass='solar'),  # Initial guess for dust_mass
+    temp_dust=35.0,  # Example value for dust_temp
+    beta=2.5  # Example value for beta
+)
+
+# Fix the parameters you don't want to vary
+params["z"].vary = False
+params['mass_dust'].vary = True
+params["temp_dust"].vary = False
+params["beta"].vary = False
+result_my_value_vary_mass = gm.fit(hdf_flux, params, nu_obs=hdf_freq_ghz,weights=weights)
+print(result_my_value_vary_mass.fit_report())
+dust_mass_my_value = utils.mass_kgs_solar_conversion(ufloat(result_my_value_vary_mass.params["mass_dust"].value,result_my_value_vary_mass.params["mass_dust"].stderr),unit_of_input_mass='kg')
+
+
+
+params["z"].vary = False
+params['mass_dust'].vary = False
+params["temp_dust"].vary = True
+params["beta"].vary = False
+result_my_value_vary_temp = gm.fit(hdf_flux, params, nu_obs=hdf_freq_ghz,weights=weights)
+print(result_my_value_vary_temp.fit_report())
+temp_dust_my_value = ufloat(result_my_value_vary_temp.params['temp_dust'].value,result_my_value_vary_temp.params['temp_dust'].stderr)
+
+
+
+
+s_my_value_vary_mass = iftools.dust_sobs(nu_obs=utils.mum_to_ghz(wave)*1e9,
+                            z = 5.183,
+                            mass_dust=result_my_value_vary_mass.params["mass_dust"].value,
+                            temp_dust=result_my_value_vary_mass.params["temp_dust"].value,
+                            beta=result_my_value_vary_mass.params["beta"].value) *  1e26 * 1e3
+
+s_my_value_vary_temp = iftools.dust_sobs(nu_obs=utils.mum_to_ghz(wave)*1e9,
+                            z = 5.183,
+                            mass_dust=result_my_value_vary_temp.params["mass_dust"].value,
+                            temp_dust=result_my_value_vary_temp.params["temp_dust"].value,
+                            beta=result_my_value_vary_temp.params["beta"].value) *  1e26 * 1e3
+
 
 plt.scatter(hdf_wave_mum,hdf_flux * 1e29,color='black')
+plt.scatter(my_value_wave,my_value_flux,color='red')
+plt.plot(wave, s_my_value_vary_mass,label='Dust Mass Fit: '
+                                f'Dust Mass = {dust_mass_my_value} $L_\odot$')
+plt.plot(wave, s_my_value_vary_temp,label='Dust Temp Fit: '
+                                f'Dust Temp = {temp_dust_my_value} K')
+plt.plot(wave,s_inter_walter,label='Walter et al. 2012')
 
 plt.xlim(1e2,1e4)
 plt.ylim(1e-4, 10**2.5)
@@ -197,28 +248,17 @@ plt.yscale('log')
 plt.xlabel(r"Observed Wavelength [$\mu$m]")
 plt.ylabel("Flux Density [mJy]")
 plt.legend()
+plt.title("HDF850.1")
 plt.show()
 
-gm = Model(iftools.dust_sobs)
 
-params = gm.make_params(
-    z=5.183,  # Example value for z
-    mass_dust=1e39,  # Initial guess for dust_mass
-    temp_dust=35.0,  # Example value for dust_temp
-    beta=2.5  # Example value for beta
-)
+print(result_my_value_vary_mass.redchi)
+print(result_my_value_vary_temp.redchi)
 
-# Fix the parameters you don't want to vary
-params["z"].vary = False
-params["temp_dust"].vary = False
-params["beta"].vary = False
-
-result = gm.fit(hdf_flux, params, nu_obs=hdf_freq_ghz)
-print(result.fit_report())
-print(utils.mass_kgs_solar_conversion(ufloat(result.params["mass_dust"].value,result.params["mass_dust"].stderr),
-                                      unit_of_input_mass='kg'))
-
-
+iftools.dust_cont_integrate(dust_mass=utils.mass_kgs_solar_conversion(2.75e8,unit_of_input_mass='solar'),dust_temp=35,dust_beta=2.5,print_to_console=True)
+print("")
+iftools.dust_cont_integrate(dust_mass = result_my_value_vary_mass.params["mass_dust"].value,dust_temp=35,dust_beta=2.5,print_to_console=True)
+exit()
 ########################################################################################################################
 
 print()

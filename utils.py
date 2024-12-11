@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from uncertainties import ufloat
+from uncertainties import ufloat, unumpy
 from math import *
 import scipy.constants as const
 from scipy.interpolate import CubicSpline, Akima1DInterpolator
 import astropy.units as u
 from astropy.cosmology import FlatLambdaCDM
 from scipy import integrate
+from scipy.constants import c
 import interferopy.tools as t
 
 def ghz_to_mum(frequency_GHz):
@@ -397,47 +398,111 @@ def dust_luminosity_one_freq_value(nu_rest_one_value, mass_dust, temp_dust, beta
 
 
 
-#Recheck this
-#Adopting the kappa value from interferopy, I and dust_cont_integrate are getting the same values (which is expected)
-#However, the values are totally wrong when compared to estimates from Tripodi et al. 2022, Decarli et al. 2023.
-#I should check why that is the case.
-def integrated_dust_luminosity(mass_dust, temp_dust, beta,only_IR=False,only_FIR=False,print_value=True):
+def dust_integrated_luminsoity(dust_mass, dust_temp,dust_beta,lum='both', gmf=ufloat(1.0,0), print_to_console=False):
 
-    # Total IR is 8 - 1000 microns
-    lum_tir = integrate.quad(lambda x: dust_luminosity_one_freq_value(nu_rest_one_value = x,
-                                                                      mass_dust=mass_dust,
-                                                                      temp_dust=temp_dust,
-                                                                      beta=beta), const.c / (1000e-6), const.c / (8e-6))
+    """
+    Estimate the dust integrated luminosity, i.e. the total IR (8-1000 micro-meter) and Far IR (42.5-122.5 micro-meter)
+    :param dust_mass: Dust Mass in kg:- ufloat variable (ufloat(nominal value, error))
+    :param dust_temp: Dust Temperature:- ufloat variable (ufloat(nominal value, error))
+    :param dust_beta: Dust Beta:- ufloat variable (ufloat(nominal value, error))
+    :param lum: which luminosity to be calculated (TIR/IR or FIR or both)
+    :param gmf: Gravitation Magnification Factior (dimensionless)
+    :param print_to_console: Print the values in solar units
+    :return: return TIR or IR or both in solar units
+    """
 
-    # Far IR is 42.5 - 122.5 microns
-    lum_fir = integrate.quad(lambda x: dust_luminosity_one_freq_value(x, mass_dust, temp_dust, beta), const.c / (122.5e-6), const.c / (42.5e-6))
+    def calc_lum(lower_limit,upper_limit):
 
-    print(np.round(lum_tir[0] * u.W.to(u.solLum) * 1e-12, 3))
-
-    if only_IR==True:
-        return np.round(lum_tir[0] * u.W.to(u.solLum), 3)
-    elif only_IR==True and print_value==True:
-        print("Ltir (10^12 Lsol) = ",np.round(lum_tir[0] * u.W.to(u.solLum) * 1e-12, 3),
-              "( or logLtir = ", np.round(np.log10((lum_tir[0] * u.W.to(u.solLum))),3),')')
-        return np.round(lum_tir[0] * u.W.to(u.solLum), 3)
+        n_samples = 10000
+        dust_mass_samples = np.random.normal(unumpy.nominal_values(dust_mass), unumpy.std_devs(dust_mass), n_samples)
+        dust_temp_samples = np.random.normal(unumpy.nominal_values(dust_temp), unumpy.std_devs(dust_temp), n_samples)
+        dust_beta_samples = np.random.normal(unumpy.nominal_values(dust_beta), unumpy.std_devs(dust_beta), n_samples)
 
 
-    if only_FIR==True:
-        return np.round(lum_fir[0] * u.W.to(u.solLum), 3)
-    elif only_FIR==True and print_value==True:
-        print("Lfir (10^12 Lsol) =",np.round(lum_fir[0] * u.W.to(u.solLum) * 1e-12, 3),
-              "( or logLfir = ", np.round(np.log10((lum_fir[0] * u.W.to(u.solLum))),3),')')
-        return np.round(lum_fir[0] * u.W.to(u.solLum), 3)
+        integrals = []
+        for i in range(n_samples):
+            integral, _ = integrate.quad(lambda x: t.dust_lum(x, dust_mass_samples[i], dust_temp_samples[i], dust_beta_samples[i]),lower_limit, upper_limit)
+            integrals.append(integral)
 
-    if only_IR==False and only_FIR==False and print_value==True:
-        print("Ltir (10^12 Lsol) = ", np.round(lum_tir[0] * u.W.to(u.solLum) * 1e-12, 3),
-              "( or logLtir = ", np.round(np.log10((lum_tir[0] * u.W.to(u.solLum))),3),')')
+        integrals = np.asarray(integrals)
+        integrals_mean = np.mean(integrals)
+        integrals_error = np.std(integrals)
 
-        print("Lfir (10^12 Lsol) =", np.round(lum_fir[0] * u.W.to(u.solLum) * 1e-12, 3),
-              "( or logLfir = ", np.round(np.log10((lum_fir[0] * u.W.to(u.solLum))),3),')')
-        return np.round(lum_tir[0] * u.W.to(u.solLum), 3), np.round(lum_fir[0] * u.W.to(u.solLum), 3)
-    else:
-        return np.round(lum_tir[0] * u.W.to(u.solLum), 3), np.round(lum_fir[0] * u.W.to(u.solLum), 3)
+        return ufloat(integrals_mean * u.W.to(u.solLum),integrals_error* u.W.to(u.solLum))
+
+    print("μ = ",gmf)
+    if lum == 'tir' or lum=='ir' or lum == 'TIR' or lum == 'IR':
+
+        tir_lower_limit = c / (1000e-6)  # Convert to frequency for integration
+        tir_upper_limit = c / (8e-6)
+
+        lum_tir = calc_lum(tir_lower_limit,tir_upper_limit)
+
+        if print_to_console == True and gmf==1:
+            print("L_tir (10^12 Lsol) = ", lum_tir * 1e-12)
+            return lum_tir
+        elif print_to_console == True and gmf!=1:
+            print(r"μL_tir (10^12 Lsol) = ", lum_tir * 1e-12)
+            print("L_tir (10^12 Lsol) = ", (lum_tir/gmf) * 1e-12)
+            return lum_tir, (lum_tir/gmf)
+
+        elif print_to_console == False and gmf!=1:
+            return lum_tir, (lum_tir/gmf)
+        else:
+            return lum_tir
+
+
+
+
+    elif lum == 'fir' or lum == 'FIR':
+
+        fir_lower_limit = c / (122.5e-6)  # Convert to frequency for integration
+        fir_upper_limit = c / (42.5e-6)
+
+        lum_fir = calc_lum(fir_lower_limit, fir_upper_limit)
+
+        if print_to_console == True and gmf == 1:
+            print("L_fir (10^12 Lsol) = ", lum_fir * 1e-12)
+            return lum_fir
+        elif print_to_console == True and gmf != 1:
+            print(r"μL_fir (10^12 Lsol) = ", lum_fir * 1e-12)
+            print("L_fir (10^12 Lsol) = ", (lum_fir / gmf) * 1e-12)
+            return lum_fir, (lum_fir / gmf)
+
+        elif print_to_console == False and gmf != 1:
+            return lum_fir, (lum_fir / gmf)
+        else:
+            return lum_fir
+
+    elif lum=='both' or lum == 'BOTH' or lum == 'Both':
+
+        tir_lower_limit = c / (1000e-6)  # Convert to frequency for integration
+        tir_upper_limit = c / (8e-6)
+        lum_tir = calc_lum(tir_lower_limit, tir_upper_limit)
+
+        fir_lower_limit = c / (122.5e-6)  # Convert to frequency for integration
+        fir_upper_limit = c / (42.5e-6)
+        lum_fir = calc_lum(fir_lower_limit, fir_upper_limit)
+
+
+        if print_to_console == True and gmf == 1:
+            print("L_tir (10^12 Lsol) = ", lum_tir * 1e-12)
+            print("L_fir (10^12 Lsol) = ", lum_fir * 1e-12)
+            return lum_tir, lum_fir
+
+        elif print_to_console == True and gmf != 1:
+            print(r"μL_tir (10^12 Lsol) = ", lum_tir * 1e-12)
+            print("L_tir (10^12 Lsol) = ", (lum_tir / gmf) * 1e-12)
+            print("")
+            print(r"μL_fir (10^12 Lsol) = ", lum_fir * 1e-12)
+            print("L_fir (10^12 Lsol) = ", (lum_fir / gmf) * 1e-12)
+            return lum_tir, (lum_tir/gmf),  lum_fir, (lum_fir / gmf)
+
+
+        elif print_to_console == False and gmf != 1:
+            return lum_tir, (lum_tir / gmf), lum_fir, (lum_fir / gmf)
+        else:
+            return lum_tir, lum_fir
 
 
 
