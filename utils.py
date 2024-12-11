@@ -185,9 +185,9 @@ def kappa(nu_rest,beta):
 
     #Taken from Interferopy (Also see: https://iopscience.iop.org/article/10.3847/1538-4357/ab2beb/pdf)
     #They have taken from Dunne+2003
-    kappa_ref = 2.64  # m**2/kg
-    kappa_nu_ref = const.c / 125e-6 # Hz
-    return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
+    #kappa_ref = 2.64  # m**2/kg
+    #kappa_nu_ref = const.c / 125e-6 # Hz
+    #return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
 
     # Dunne+2000 ?
     # kappa_ref=0.77*u.cm**2/u.g
@@ -201,10 +201,10 @@ def kappa(nu_rest,beta):
     #return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
 
     #Saw this value in Tripodi et al. 2022 (https://www.aanda.org/articles/aa/pdf/2022/09/aa43920-22.pdf)
-    #kappa_ref = 0.45 * u.cm**2/u.g
-    #kappa_ref = kappa_ref.to(u.m**2/u.kg).value
-    #kappa_nu_ref = 250e9
-    #return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
+    kappa_ref = 0.45 * u.cm**2/u.g
+    kappa_ref = kappa_ref.to(u.m**2/u.kg).value
+    kappa_nu_ref = 250e9
+    return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
 
     """
     #Taken from Decarli et al. 2023
@@ -298,7 +298,7 @@ def tau(nu_rest,beta,solid_angle,mass_dust,z):
 
 
 def dust_s_obs(nu_obs, z,mass_dust, temp_dust, beta, cmb_contrast = True, cmb_heating = True,
-               solid_angle=0., optically_thick_regime=False,
+               solid_angle=0., optically_thick_regime=True,
                output_unit_mjy=False):
 
     """
@@ -411,6 +411,7 @@ def dust_integrated_luminsoity(dust_mass, dust_temp,dust_beta,lum='both', gmf=uf
     :return: return TIR or IR or both in solar units
     """
 
+    print("")
     def calc_lum(lower_limit,upper_limit):
 
         n_samples = 10000
