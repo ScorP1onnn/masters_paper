@@ -9,8 +9,6 @@ import astropy.units as u
 from matplotlib.pyplot import tight_layout
 
 import utils as utils
-from utils import ghz_to_mum, mum_to_ghz
-
 
 #ALMA,
 def alma_filter(file_name,rest_freq=0.,z=0.,tuning_freq=[],middle_freq=0.,alma_bandwidth=7.5,bin=30.,plot=False):
@@ -84,7 +82,7 @@ def alma_filter(file_name,rest_freq=0.,z=0.,tuning_freq=[],middle_freq=0.,alma_b
     )
     header = "\n".join(comments)
 
-    desktop_path = os.path.expanduser('~') + '/Desktop' + '/alma_iram_filters' + '/pssj'
+    desktop_path = os.path.expanduser('~') + '/Desktop' + '/alma_iram_filters' + '/j2054'
     file_path = os.path.join(desktop_path, file_name + '.dat')
 
     np.savetxt(file_path,data, fmt="%.6f", header=header, comments="# ")
@@ -169,7 +167,12 @@ alma_filter(file_name=file_tripodi_2024_488,middle_freq=obs_freq_488,bin=50,plot
 obs_freq_674 = 674.97
 file_tripodi_2024_674 = 'tripodi_2024_674_GHz'
 alma_filter(file_name=file_tripodi_2024_674,middle_freq=obs_freq_674,bin=50,plot=True)
+"""
 
+z_j2054=6.0391
+obs_freq_my_value = 1461.134/(1+z_j2054)
+file_my_value = "my_value_nii_in_GHz"
+alma_filter(file_name=file_my_value,middle_freq=obs_freq_my_value,bin=50,plot=True)
 
 #J2054-0005
 header = ("#id redshift "
@@ -185,6 +188,7 @@ header = ("#id redshift "
           "tripodi_2024_262_GHz tripodi_2024_262_GHz_err "
           "tripodi_2024_263_GHz tripodi_2024_263_GHz_err "
           "tripodi_2024_674_GHz tripodi_2024_674_GHz_err "
+          "my_value_nii_in_GHz my_value_nii_in_GHz_err "
           )
 
 data = ('J2054-0005',6.0392,
@@ -199,7 +203,8 @@ data = ('J2054-0005',6.0392,
         0.082,0.009,
         2.93,0.07,
         3.08, 0.03,
-        9.87, 0.94
+        9.87, 0.94,
+        0.8,0.1
         )
 
 
@@ -210,7 +215,7 @@ with open("/home/sai/Desktop/cigale_trail/j2054/J2054_cigale.txt", "w") as f:
 
 
 exit()
-"""
+
 
 
 """
@@ -328,29 +333,7 @@ with open("/home/sai/Desktop/cigale_trail/j2310/J2310_cigale.txt", "w") as f:
 
 
 exit()
-
 """
-#PSSJ2322+1944
-
-pssj_freq_ghz = np.array([90,96,201.78,225,231,350,mum_to_ghz(450),mum_to_ghz(350),1875,4300]) #All obs freq
-pssj_freq_wave = mum_to_ghz(pssj_freq_ghz)
-pssj_flux = np.array([0.4, 0.31,5.79,7.5,9.6,22.5,75,79,0.0434e3,0.0137e3])
-pssj_flux_err = np.array([0.25,0.08,0.77,1.3,0.5,2.5,19,11, 0.0084e3,0.0061e3])
-
-print(pssj_freq_wave)
-
-plt.scatter(pssj_freq_wave,pssj_flux)
-plt.scatter(ghz_to_mum(np.array([1.4,5])),[9.8e-2,9e-2])
-plt.xlim(1e1,1e6)
-plt.ylim(1e-4, 10**3)
-plt.xscale('log')
-plt.yscale('log')
-plt.xlabel(r"Observed Wavelength [$\mu$m]")
-plt.ylabel("Flux Density [mJy]")
-plt.show()
-plt.show()
-
-
 
 
 #Carilli et al. 2001

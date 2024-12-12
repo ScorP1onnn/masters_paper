@@ -440,11 +440,11 @@ def dust_integrated_luminsoity(dust_mass, dust_temp,dust_beta,lum='both', gmf=uf
         lum_tir = calc_lum(tir_lower_limit,tir_upper_limit)
 
         if print_to_console == True and gmf==1:
-            print("L_tir (10^12 Lsol) = ", lum_tir * 1e-12)
+            print(f"L_tir (10^12 Lsol) = {lum_tir * 1e-12:.3f}" )
             return lum_tir
         elif print_to_console == True and gmf!=1:
-            print(r"μL_tir (10^12 Lsol) = ", lum_tir * 1e-12)
-            print("L_tir (10^12 Lsol) = ", (lum_tir/gmf) * 1e-12)
+            print(f"μL_tir (10^12 Lsol) = {lum_tir * 1e-12:.3f}")
+            print(f"L_tir (10^12 Lsol) = {(lum_tir/gmf) * 1e-12:.3f}")
             return lum_tir, (lum_tir/gmf)
 
         elif print_to_console == False and gmf!=1:
@@ -463,11 +463,11 @@ def dust_integrated_luminsoity(dust_mass, dust_temp,dust_beta,lum='both', gmf=uf
         lum_fir = calc_lum(fir_lower_limit, fir_upper_limit)
 
         if print_to_console == True and gmf == 1:
-            print("L_fir (10^12 Lsol) = ", lum_fir * 1e-12)
+            print(f"L_fir (10^12 Lsol) = {lum_fir * 1e-12:.3f}", )
             return lum_fir
         elif print_to_console == True and gmf != 1:
-            print(r"μL_fir (10^12 Lsol) = ", lum_fir * 1e-12)
-            print("L_fir (10^12 Lsol) = ", (lum_fir / gmf) * 1e-12)
+            print(f"μL_fir (10^12 Lsol) = {lum_fir * 1e-12:.3f}")
+            print(f"L_fir (10^12 Lsol) = {(lum_fir / gmf) * 1e-12:.3f}")
             return lum_fir, (lum_fir / gmf)
 
         elif print_to_console == False and gmf != 1:
@@ -487,16 +487,16 @@ def dust_integrated_luminsoity(dust_mass, dust_temp,dust_beta,lum='both', gmf=uf
 
 
         if print_to_console == True and gmf == 1:
-            print("L_tir (10^12 Lsol) = ", lum_tir * 1e-12)
-            print("L_fir (10^12 Lsol) = ", lum_fir * 1e-12)
+            print(f"L_tir (10^12 Lsol) = {lum_tir * 1e-12:.3f}")
+            print(f"L_fir (10^12 Lsol) = {lum_fir * 1e-12:.3f}")
             return lum_tir, lum_fir
 
         elif print_to_console == True and gmf != 1:
-            print(r"μL_tir (10^12 Lsol) = ", lum_tir * 1e-12)
-            print("L_tir (10^12 Lsol) = ", (lum_tir / gmf) * 1e-12)
+            print(f"μL_tir (10^12 Lsol) = {lum_tir * 1e-12:.3f}")
+            print(f"L_tir (10^12 Lsol) = {(lum_tir / gmf) * 1e-12:.3f}")
             print("")
-            print(r"μL_fir (10^12 Lsol) = ", lum_fir * 1e-12)
-            print("L_fir (10^12 Lsol) = ", (lum_fir / gmf) * 1e-12)
+            print(f"μL_fir (10^12 Lsol) = {lum_fir * 1e-12:.3f}")
+            print(f"L_fir (10^12 Lsol) = {(lum_fir / gmf) * 1e-12:.3f}")
             return lum_tir, (lum_tir/gmf),  lum_fir, (lum_fir / gmf)
 
 
