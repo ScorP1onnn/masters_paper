@@ -287,15 +287,23 @@ s_my_value_vary_all = iftools.dust_sobs(nu_obs=utils.mum_to_ghz(wave)*1e9,
                             beta=result_my_value_vary_all.params["beta"].value) *  1e26 * 1e3
 
 
-
+#result_my_value_vary_mass.params["temp_dust"].stderr
 utils.dust_integrated_luminsoity(dust_mass=utils.mass_kgs_solar_conversion(dust_mass_my_value,'solar'),
                                  dust_temp=ufloat(result_my_value_vary_mass.params["temp_dust"].value,result_my_value_vary_mass.params["temp_dust"].stderr),
-                                 dust_beta=ufloat(result_my_value_vary_mass.params["beta"].value,result_my_value_vary_mass.params["beta"].stderr),
+                                 dust_beta=2.5,
                                  lum='both',
                                  gmf=1.7,
                                  print_to_console=True)
 
+print("")
+iftools.dust_cont_integrate(dust_mass=utils.mass_kgs_solar_conversion(dust_mass_my_value.n,'solar'),
+                            dust_temp=result_my_value_vary_mass.params["temp_dust"].value,
+                            dust_beta=2.5,
+                            print_to_console=True)
 
+
+
+"""
 utils.dust_integrated_luminsoity(dust_mass=utils.mass_kgs_solar_conversion(dust_mass_vary_all,'solar'),
                                  dust_temp=ufloat(result_my_value_vary_all.params["temp_dust"].value,result_my_value_vary_all.params["temp_dust"].stderr),
                                  dust_beta=ufloat(result_my_value_vary_all.params["beta"].value,result_my_value_vary_all.params["beta"].stderr),
@@ -303,7 +311,7 @@ utils.dust_integrated_luminsoity(dust_mass=utils.mass_kgs_solar_conversion(dust_
                                  gmf=1.7,
                                  print_to_console=True)
 
-
+"""
 
 
 plt.scatter(hdf_wave_mum,hdf_flux * 1e29,color='black')
