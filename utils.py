@@ -414,7 +414,7 @@ def dust_integrated_luminsoity(dust_mass, dust_temp,dust_beta,lum='both', gmf=uf
     print("")
     def calc_lum(lower_limit,upper_limit):
 
-        n_samples = 10000
+        n_samples = 2000
         dust_mass_samples = np.random.normal(unumpy.nominal_values(dust_mass), unumpy.std_devs(dust_mass), n_samples)
         dust_temp_samples = np.random.normal(unumpy.nominal_values(dust_temp), unumpy.std_devs(dust_temp), n_samples)
         dust_beta_samples = np.random.normal(unumpy.nominal_values(dust_beta), unumpy.std_devs(dust_beta), n_samples)

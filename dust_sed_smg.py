@@ -151,6 +151,7 @@ plt.xscale('log')
 plt.yscale('log')
 plt.xlabel(r"Observed Wavelength [$\mu$m]")
 plt.ylabel("Flux Density [mJy]")
+plt.title("HDF850.1")
 plt.legend()
 plt.show()
 
@@ -252,7 +253,7 @@ params["z"].vary = False
 params['mass_dust'].vary = True
 params["temp_dust"].vary = True
 params["beta"].vary = False
-result_my_value_vary_mass = gm.fit(hdf_flux, params, nu_obs=hdf_freq_ghz,weights=weights,nan_policy='omit')
+result_my_value_vary_mass = gm.fit(hdf_flux, params, nu_obs=hdf_freq_ghz,cmb_contrast=True,cmb_heating=True,weights=weights,nan_policy='omit')
 print(result_my_value_vary_mass.fit_report())
 dust_mass_my_value = utils.mass_kgs_solar_conversion(ufloat(result_my_value_vary_mass.params["mass_dust"].value,
                                                             result_my_value_vary_mass.params["mass_dust"].stderr),unit_of_input_mass='kg')
@@ -263,7 +264,8 @@ params['mass_dust'].vary = True
 params["temp_dust"].vary = True
 params["beta"].vary = True
 params['beta'].min=2
-result_my_value_vary_all = gm.fit(hdf_flux, params, nu_obs=hdf_freq_ghz,weights=weights,nan_policy='omit')
+result_my_value_vary_all = gm.fit(hdf_flux, params, nu_obs=hdf_freq_ghz,cmb_contrast=True,cmb_heating=True,weights=weights,nan_policy='omit',
+                                  )
 print(result_my_value_vary_all.fit_report())
 dust_mass_vary_all = utils.mass_kgs_solar_conversion(ufloat(result_my_value_vary_all.params["mass_dust"].value,
                                                             result_my_value_vary_all.params["mass_dust"].stderr),unit_of_input_mass='kg')
@@ -295,6 +297,16 @@ utils.dust_integrated_luminsoity(dust_mass=utils.mass_kgs_solar_conversion(dust_
                                  gmf=1.7,
                                  print_to_console=True)
 
+
+utils.dust_integrated_luminsoity(dust_mass=utils.mass_kgs_solar_conversion(dust_mass_my_value,'solar'),
+                                 dust_temp=ufloat(35,5),
+                                 dust_beta=2.5,
+                                 lum='both',
+                                 gmf=1.7,
+                                 print_to_console=True)
+
+
+
 print("")
 iftools.dust_cont_integrate(dust_mass=utils.mass_kgs_solar_conversion(dust_mass_my_value.n,'solar'),
                             dust_temp=result_my_value_vary_mass.params["temp_dust"].value,
@@ -313,10 +325,10 @@ utils.dust_integrated_luminsoity(dust_mass=utils.mass_kgs_solar_conversion(dust_
 
 """
 
-
-plt.scatter(hdf_wave_mum,hdf_flux * 1e29,color='black')
-plt.scatter(my_value_wave,my_value_flux,color='red',label='Our Value')
-plt.plot(wave, s_my_value_vary_mass,label='Best Fit: '
+s = 1#/(1+5.183)
+plt.scatter(hdf_wave_mum*s,hdf_flux * 1e29,color='black')
+plt.scatter(my_value_wave*s,my_value_flux,color='red',label='Our Value')
+plt.plot(wave*s, s_my_value_vary_mass,label='Best Fit: '
                                 f'\nDust Mass = {dust_mass_my_value} $L_\odot$'
                                           f'\nDust Temp = {ufloat(result_my_value_vary_mass.params["temp_dust"].value,result_my_value_vary_mass.params["temp_dust"].stderr)} K'
                                           f'\nBeta = {ufloat(result_my_value_vary_mass.params["beta"].value,result_my_value_vary_mass.params["beta"].stderr)} (FIXED)')
@@ -325,11 +337,11 @@ plt.plot(wave, s_my_value_vary_all,label='Best Fit: '
                                 f'\nDust Mass = {dust_mass_vary_all} $L_\odot$'
                                           f'\nDust Temp = {ufloat(result_my_value_vary_all.params["temp_dust"].value,result_my_value_vary_all.params["temp_dust"].stderr)} K'
                                           f'\nBeta = {ufloat(result_my_value_vary_all.params["beta"].value,result_my_value_vary_all.params["beta"].stderr)}')
+
 """
+plt.plot(wave*s,s_inter_walter,label='Walter et al. 2012')
 
-plt.plot(wave,s_inter_walter,label='Walter et al. 2012')
-
-plt.xlim(1e2,1e4)
+plt.xlim(1e2,1e4*s)
 plt.ylim(1e-4, 10**2.5)
 plt.xscale('log')
 plt.yscale('log')
@@ -340,7 +352,7 @@ plt.title("HDF850.1")
 plt.show()
 
 
-
+exit()
 ########################################################################################################################
 
 print()
@@ -407,7 +419,7 @@ params["beta"].vary = False
 weights = 1/id141_flux_err
 
 
-result_id141 = gm.fit(id141_flux, params, nu_obs=id141_freq_ghz, weights=weights)
+result_id141 = gm.fit(id141_flux, params, nu_obs=id141_freq_ghz,cmb_contrast=True,cmb_heating=True, weights=weights)
 print(result_id141.fit_report())
 
 
@@ -519,7 +531,7 @@ params["beta"].vary = False
 weights = 1/gn20_flux_err
 
 
-result_gn20 = gm.fit(gn20_flux, params, nu_obs=gn20_freq_hz, weights=weights)
+result_gn20 = gm.fit(gn20_flux, params, nu_obs=gn20_freq_hz,cmb_contrast=True,cmb_heating=True, weights=weights)
 print(result_gn20.fit_report())
 
 dust_mass_solar_gn20 = ufloat(utils.mass_kgs_solar_conversion(result_gn20.params["mass_dust"].value,unit_of_input_mass='kg'),

@@ -1,0 +1,16 @@
+HDF850.1
+
+Plotting a modified black body, using the formulation from Novak et al. 2019, adopting the dust mass and dust temperature from Walter et al. 2012 (Dust mass = 2.75e8 M_solar, Dust Temperature = 35 K), does not trace the reported (Walter et al. 2012 and Downes et al. 1999) continuum fluxes.
+
+Assuming T=35 K and beta = 2.5, A dust mass of 9.8e8 M_solar is required to reach a reasonable fit for the Walter et al. 2012 and Downes et al. 1999 fluxes.
+
+In addition to Walter et al. 2012 and Downes et al. 1999 flxues, I included data points from Cowie et al. 2017, Chapin et al. 2009, Neri et al. 2014, Staguhn et al. 2014. I fit the data points again this time keeping only beta constant. The derived values are in the plot. This gives a μL_tir (10^12 Lsol) = 6.497+/-5.345 x 10^12 solar. The large error is a direct consequence of the error propogation while computing the integral. Within this error, the μL_tir estimate is somewhat consistent, but the lower derived estimate compared to the Walter+12 estimate (~8.7 x 10^12 solar) and Sun+24 (~1.2 x 10^13 solar) could be due to the steep drop of the MBB in the mid-IR regime (<300 mu_m observed wavelength).
+
+In any case, our value at 1461.134GHz/(1+z_hdf850.1) does not significantly affect the fit.
+
+I will update my estimates on L_nii/L_IR and other by taking the new IR values from Sun et al. 2024
+
+
+For ID141 and GN20, and J2310+1855, the MBB fit including our continuum flux at 1461.134GHz/(1+z_source) is consistant with the fits and derived estimates from literature. For PSSJ2322+1944, the FIR is consistent since fitting the IR would require including a torus template, and according to Tripodi et al. 2022 (or 2024), including a torus template does not significantly change the derived MBB fit parameters, and therefore, I will be skipping it.
+
+For J2054-0005, I am facing a small issue with the CIGALE package so I will send the fit including our data point next week.

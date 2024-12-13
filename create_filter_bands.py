@@ -171,7 +171,7 @@ alma_filter(file_name=file_tripodi_2024_674,middle_freq=obs_freq_674,bin=50,plot
 
 z_j2054=6.0391
 obs_freq_my_value = 1461.134/(1+z_j2054)
-file_my_value = "my_value_nii_in_GHz"
+file_my_value = "j2054_my_value_nii_in_GHz"
 alma_filter(file_name=file_my_value,middle_freq=obs_freq_my_value,bin=50,plot=True)
 
 #J2054-0005
@@ -188,7 +188,7 @@ header = ("#id redshift "
           "tripodi_2024_262_GHz tripodi_2024_262_GHz_err "
           "tripodi_2024_263_GHz tripodi_2024_263_GHz_err "
           "tripodi_2024_674_GHz tripodi_2024_674_GHz_err "
-          "my_value_nii_in_GHz my_value_nii_in_GHz_err "
+          "j2054_my_value_nii_in_GHz j2054_my_value_nii_in_GHz_err "
           )
 
 data = ('J2054-0005',6.0392,
@@ -223,13 +223,13 @@ exit()
 restfreq = 3393.006244
 z_j2310=6.0035
 file = 'j2310_hashimoto'
-alma_filter(rest_freq=restfreq,z=z_j2310,file_name=file,tuning_freq=[483.19,486.31],plot=True)
+alma_filter(rest_freq=restfreq,z=z_j2310,file_name=file,tuning_freq=[483.19,486.31],plot=False)
 
 
 #Wang et al. 2008 (250 MAMBO-II)
 obs_freq_99 = 99
 file_wang_2008_99 = 'j2310_wang_2008_99_GHz'
-alma_filter(file_name=file_wang_2008_99,middle_freq=obs_freq_99,alma_bandwidth=8,bin=50,plot=True)
+alma_filter(file_name=file_wang_2008_99,middle_freq=obs_freq_99,alma_bandwidth=8,bin=50,plot=False)
 
 
 
@@ -237,43 +237,43 @@ alma_filter(file_name=file_wang_2008_99,middle_freq=obs_freq_99,alma_bandwidth=8
 
 obs_freq_91 = 91.5 #Use it as middle freq
 file_tripodi_2022_91 = 'j2310_tripodi_2022_91_GHz'
-alma_filter(file_name=file_tripodi_2022_91,middle_freq=obs_freq_91,bin=50,plot=True)
+alma_filter(file_name=file_tripodi_2022_91,middle_freq=obs_freq_91,bin=50,plot=False)
 
 obs_freq_136 = 136.627 #Use it as middle freq
 file_tripodi_2022_136 = 'j2310_tripodi_2022_136_GHz'
-alma_filter(file_name=file_tripodi_2022_136,middle_freq=obs_freq_136,bin=50,plot=True)
+alma_filter(file_name=file_tripodi_2022_136,middle_freq=obs_freq_136,bin=50,plot=False)
 
 obs_freq_140 = 140.995 #Use it as middle freq
 file_tripodi_2022_140 = 'j2310_tripodi_2022_140_GHz'
-alma_filter(file_name=file_tripodi_2022_140,middle_freq=obs_freq_140,bin=50,plot=True)
+alma_filter(file_name=file_tripodi_2022_140,middle_freq=obs_freq_140,bin=50,plot=False)
 
 obs_freq_153 = 153.07 #Use it as middle freq
 file_tripodi_2022_153 = 'j2310_tripodi_2022_153_GHz'
-alma_filter(file_name=file_tripodi_2022_153,middle_freq=obs_freq_153,bin=50,plot=True)
+alma_filter(file_name=file_tripodi_2022_153,middle_freq=obs_freq_153,bin=50,plot=False)
 
 obs_freq_263 = 263.315 #Use it as middle freq
 file_tripodi_2022_263 = 'j2310_tripodi_2022_263_GHz'
-alma_filter(file_name=file_tripodi_2022_263,middle_freq=obs_freq_263,bin=50,plot=True)
+alma_filter(file_name=file_tripodi_2022_263,middle_freq=obs_freq_263,bin=50,plot=False)
 
 obs_freq_265 = 265.369 #Use it as middle freq
 file_tripodi_2022_265 = 'j2310_tripodi_2022_265_GHz'
-alma_filter(file_name=file_tripodi_2022_265,middle_freq=obs_freq_265,bin=50,plot=True)
+alma_filter(file_name=file_tripodi_2022_265,middle_freq=obs_freq_265,bin=50,plot=False)
 
 obs_freq_284 = 284.988 #Use it as middle freq
 file_tripodi_2022_284 = 'j2310_tripodi_2022_284_GHz'
-alma_filter(file_name=file_tripodi_2022_284,middle_freq=obs_freq_284,bin=50,plot=True)
+alma_filter(file_name=file_tripodi_2022_284,middle_freq=obs_freq_284,bin=50,plot=False)
 
 obs_freq_289 = 289.18 #Use it as middle freq
 file_tripodi_2022_289 = 'j2310_tripodi_2022_289_GHz'
-alma_filter(file_name=file_tripodi_2022_289,middle_freq=obs_freq_289,bin=50,plot=True)
+alma_filter(file_name=file_tripodi_2022_289,middle_freq=obs_freq_289,bin=50,plot=False)
 
 obs_freq_344 = 344.185 #Use it as middle freq
 file_tripodi_2022_344 = 'j2310_tripodi_2022_344_GHz'
-alma_filter(file_name=file_tripodi_2022_344,middle_freq=obs_freq_344,bin=50,plot=True)
+alma_filter(file_name=file_tripodi_2022_344,middle_freq=obs_freq_344,bin=50,plot=False)
 
 obs_freq_490 = 490.787 #Use it as middle freq
 file_tripodi_2022_490 = 'j2310_tripodi_2022_490_GHz'
-alma_filter(file_name=file_tripodi_2022_490,middle_freq=obs_freq_490,bin=50,plot=True)
+alma_filter(file_name=file_tripodi_2022_490,middle_freq=obs_freq_490,bin=50,plot=False)
 
 
 header = ("#id redshift "
