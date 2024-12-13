@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 from uncertainties import ufloat, unumpy
 from math import *
@@ -9,6 +8,7 @@ from astropy.cosmology import FlatLambdaCDM
 from scipy import integrate
 from scipy.constants import c
 import interferopy.tools as t
+from tqdm import tqdm
 
 def ghz_to_mum(frequency_GHz):
     return (const.c/frequency_GHz/1e9) * 1e6
@@ -41,12 +41,14 @@ def mass_kgs_solar_conversion(mass,unit_of_input_mass,power=False):
         raise ValueError("Invalid target unit. Use 'solar' for solar masses or 'kg' for kilograms.")
 
 
-def log10_of_error(value,err):
+def log10_of_error(num):
+    value = num.n
+    err = num.s
     return err/(value*np.log(10))
 
 
-def luminosity_distance(x,H_0=70,W_M=0.3):
-    z=x
+def luminosity_distance(z,H_0=70,W_M=0.3):
+    z=z
     W_R = 0.                #Omega Radiation
     W_K = 0.                #Omega curvature
     c = 299792.458          #speed of light in km/s
@@ -185,14 +187,15 @@ def kappa(nu_rest,beta):
 
     #Taken from Interferopy (Also see: https://iopscience.iop.org/article/10.3847/1538-4357/ab2beb/pdf)
     #They have taken from Dunne+2003
-    #kappa_ref = 2.64  # m**2/kg
-    #kappa_nu_ref = const.c / 125e-6 # Hz
-    #return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
+    kappa_ref = 2.64  # m**2/kg
+    kappa_nu_ref = const.c / 125e-6 # Hz
+    return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
 
     # Dunne+2000 ?
-    # kappa_ref=0.77*u.cm**2/u.g
-    # kappa_ref=kappa_ref.to(u.m**2/u.kg).value
-    # kappa_nu_ref=c/850e-6
+    #kappa_ref=0.77*u.cm**2/u.g
+    #kappa_ref=kappa_ref.to(u.m**2/u.kg).value
+    #kappa_nu_ref=c/850e-6
+    #return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
 
     #Saw this value in Decarli et al. 2018 (https://www.aanda.org/articles/aa/pdf/2022/09/aa43920-22.pdf)
     #kappa_ref = 0.77 * u.cm**2/u.g
@@ -201,12 +204,12 @@ def kappa(nu_rest,beta):
     #return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
 
     #Saw this value in Tripodi et al. 2022 (https://www.aanda.org/articles/aa/pdf/2022/09/aa43920-22.pdf)
-    kappa_ref = 0.45 * u.cm**2/u.g
-    kappa_ref = kappa_ref.to(u.m**2/u.kg).value
-    kappa_nu_ref = 250e9
-    return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
+    #kappa_ref = 0.45 * u.cm**2/u.g
+    #kappa_ref = kappa_ref.to(u.m**2/u.kg).value
+    #kappa_nu_ref = 250e9
+    #return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
 
-    """
+"""
     #Taken from Decarli et al. 2023
     if isinstance(nu_rest, (float)) == True:
         return kappa_Draine_2003(nu_rest = nu_rest,beta = beta)
@@ -216,7 +219,7 @@ def kappa(nu_rest,beta):
             kv.append(kappa_Draine_2003(nu_rest = i,beta = beta))
         kv = np.asarray(kv)
         return kv
-        """
+"""
     
 
 
@@ -297,7 +300,7 @@ def tau(nu_rest,beta,solid_angle,mass_dust,z):
 
 
 
-def dust_s_obs(nu_obs, z,mass_dust, temp_dust, beta, cmb_contrast = True, cmb_heating = True,
+def dust_s_obs(nu_obs, z,dust_mass, dust_temp, beta, cmb_contrast = True, cmb_heating = True,
                solid_angle=0., optically_thick_regime=True,
                output_unit_mjy=False):
 
@@ -306,8 +309,8 @@ def dust_s_obs(nu_obs, z,mass_dust, temp_dust, beta, cmb_contrast = True, cmb_he
     :param nu_obs: Observed frame frequency in Hz.
     :param z: Redshift
 
-    :param mass_dust: Total dust mass in kg.
-    :param temp_dust: Intrinsic dust temperature in K (the source would have at z=0).
+    :param dust_mass: Total dust mass in kg.
+    :param dust_temp: Intrinsic dust temperature in K (the source would have at z=0).
     :param beta: Emissivity coefficient, dimensionless.
 
     :param cmb_contrast: Correcting for cosmic microwave background contrast.
@@ -331,9 +334,9 @@ def dust_s_obs(nu_obs, z,mass_dust, temp_dust, beta, cmb_contrast = True, cmb_he
 
     # Correct for CMB heating from da Cunha+2013 (See interferopy source code)
     if cmb_heating == True:
-        temp_dust_z = (temp_dust ** (4 + beta) + temp_cmb_0 ** (4 + beta) * ((1 + z) ** (4 + beta) - 1)) ** (1 / (4 + beta))
+        temp_dust_z = (dust_temp ** (4 + beta) + temp_cmb_0 ** (4 + beta) * ((1 + z) ** (4 + beta) - 1)) ** (1 / (4 + beta))
     else:
-        temp_dust_z = temp_dust
+        temp_dust_z = dust_temp
 
 
 
@@ -348,7 +351,7 @@ def dust_s_obs(nu_obs, z,mass_dust, temp_dust, beta, cmb_contrast = True, cmb_he
         solid_angle_arcsec2 = solid_angle * u.arcsec ** 2
         solid_angle_steradians = solid_angle_arcsec2.to(u.steradian).value
 
-        t = tau(nu_rest=nu_rest, beta=beta, solid_angle=solid_angle_steradians, mass_dust=mass_dust, z=z)
+        t = tau(nu_rest=nu_rest, beta=beta, solid_angle=solid_angle_steradians, mass_dust=dust_mass, z=z)
 
         flux_obs = (solid_angle_steradians / ((1 + z) ** 3)) * f_cmb * (1 - np.exp(-t))
 
@@ -366,7 +369,7 @@ def dust_s_obs(nu_obs, z,mass_dust, temp_dust, beta, cmb_contrast = True, cmb_he
         else:
             f_cmb = 1
 
-        flux_obs = (f_cmb * (1 + z) / dl**2) *  kappa(nu_rest=nu_rest,beta=beta) * mass_dust * blackbody(nu_rest, temp_dust)
+        flux_obs = (f_cmb * (1 + z) / dl**2) *  kappa(nu_rest=nu_rest,beta=beta) * dust_mass * blackbody(nu_rest, dust_temp)
 
         if output_unit_mjy == True:
             return flux_obs * 1e29 #mJy
@@ -397,8 +400,11 @@ def dust_luminosity_one_freq_value(nu_rest_one_value, mass_dust, temp_dust, beta
 
 
 
-
-def dust_integrated_luminsoity(dust_mass, dust_temp,dust_beta,lum='both', gmf=ufloat(1.0,0), print_to_console=False):
+def dust_integrated_luminosity(dust_mass, dust_temp,dust_beta,
+                               lum='both', gmf=ufloat(1.0,0),
+                               optically_thick_regime=False,z=0.,solid_angle=0.,
+                               n_samples=1000,
+                               print_to_console=True):
 
     """
     Estimate the dust integrated luminosity, i.e. the total IR (8-1000 micro-meter) and Far IR (42.5-122.5 micro-meter)
@@ -407,29 +413,65 @@ def dust_integrated_luminsoity(dust_mass, dust_temp,dust_beta,lum='both', gmf=uf
     :param dust_beta: Dust Beta:- ufloat variable (ufloat(nominal value, error))
     :param lum: which luminosity to be calculated (TIR/IR or FIR or both)
     :param gmf: Gravitation Magnification Factior (dimensionless)
+    :param optically_thick_regime: IF True:- Calculations done assuming optically thick regime (tau is not ignored)
+                                   IF False:- Calculations done assuming optically thin regime (tau is ignored)
+    :param z: redshift (Use when assuming optically thick regime)
+    :param solid_angle: Solid Angle (Use when assuming optically thick regime)
     :param print_to_console: Print the values in solar units
     :return: return TIR or IR or both in solar units
     """
 
+
+
     print("")
     def calc_lum(lower_limit,upper_limit):
 
-        n_samples = 2000
         dust_mass_samples = np.random.normal(unumpy.nominal_values(dust_mass), unumpy.std_devs(dust_mass), n_samples)
         dust_temp_samples = np.random.normal(unumpy.nominal_values(dust_temp), unumpy.std_devs(dust_temp), n_samples)
         dust_beta_samples = np.random.normal(unumpy.nominal_values(dust_beta), unumpy.std_devs(dust_beta), n_samples)
 
 
         integrals = []
-        for i in range(n_samples):
-            integral, _ = integrate.quad(lambda x: t.dust_lum(x, dust_mass_samples[i], dust_temp_samples[i], dust_beta_samples[i]),lower_limit, upper_limit)
-            integrals.append(integral)
+        if optically_thick_regime==True:
+            solid_angle_samples = np.random.normal(unumpy.nominal_values(solid_angle), unumpy.std_devs(solid_angle), n_samples)
+            for i in tqdm(range(n_samples),desc='Calculating'):
+                integral = integrate.quad(lambda x: dust_s_obs(x, z=z,
+                                                                dust_mass=dust_mass_samples[i],
+                                                                dust_temp=dust_temp_samples[i],
+                                                                beta=dust_beta_samples[i],
+                                                                optically_thick_regime=True,
+                                                                solid_angle=solid_angle_samples[i],
+                                                                output_unit_mjy=True),lower_limit,upper_limit)[0] #mJy * Hz
 
-        integrals = np.asarray(integrals)
-        integrals_mean = np.mean(integrals)
-        integrals_error = np.std(integrals)
 
-        return ufloat(integrals_mean * u.W.to(u.solLum),integrals_error* u.W.to(u.solLum))
+
+                #Taken from line 558 of https://github.com/roberta96/EOS-Dustfit/blob/main/colddust_sed_models/cdsed_modelling/results_plot.py
+                integral = (integral * u.mJy * u.Hz).to(u.mJy * u.GHz) #Convert to mJy*GHz
+                dl = (luminosity_distance(z) * u.Mpc).to(u.cm)
+                integral = (4 * np.pi * (dl.value ** 2) * integral.value * 1e-26 * 1e9) #(cm2)*(mJy*GHz)*1e-26*1e9 = erg/s
+                L_sun = 3.826 * 1e33  # erg/s
+                integrals.append(integral/L_sun) #Lsun
+
+            integrals = np.asarray(integrals)
+            integrals_mean = np.mean(integrals)
+            integrals_error = np.std(integrals)
+            return ufloat(integrals_mean, integrals_error)
+
+
+
+        else:
+            for i in range(n_samples):
+                integral = integrate.quad(lambda x: dust_luminosity_one_freq_value(x, dust_mass_samples[i], dust_temp_samples[i], dust_beta_samples[i]),lower_limit, upper_limit)[0]
+                integrals.append(integral)
+
+
+
+            integrals = np.asarray(integrals)
+            integrals_mean = np.mean(integrals)
+            integrals_error = np.std(integrals)
+
+
+            return ufloat(integrals_mean * u.W.to(u.solLum).value,integrals_error* u.W.to(u.solLum).value)
 
     print("μ = ",gmf)
     if lum == 'tir' or lum=='ir' or lum == 'TIR' or lum == 'IR':
@@ -578,4 +620,63 @@ integrated_dust_luminosity(mass_dust=mass_dust,temp_dust=temp_dust,beta=beta,pri
 
 #The SED fit and TIR/FIR values are consistent with those from Novak et al. 2019 (https://arxiv.org/pdf/1906.08569)
 """
+
+
+
+
+
+
+
+
+
+
+#To Test for IR luminosity Values
+
+m_dust = 10**ufloat(8.94,0.06)
+t_dust = ufloat(47,1.5)
+beta = ufloat(1.84,0.15)
+sa = ufloat(0.155,0.029)
+
+a=dust_integrated_luminosity(dust_mass=mass_kgs_solar_conversion(m_dust,'solar'),
+                           dust_temp=t_dust,
+                           dust_beta=beta,
+                           lum='tir',
+                           optically_thick_regime=True,
+                           z=6.4373,
+                           solid_angle=sa,
+                           n_samples=100,
+                           print_to_console=True)
+
+
+print(ufloat(np.log10(a.n),log10_of_error(a)))
+
+m = mass_kgs_solar_conversion(m_dust,'solar')
+i3 = integrate.quad(lambda freq: dust_s_obs(freq, z = 6.4373,
+                         solid_angle=sa.n,
+                         dust_mass=m.n,
+                         dust_temp=t_dust.n,
+                         beta=beta.n,
+                         optically_thick_regime=True,
+                         output_unit_mjy=True),
+                    (c/1000e-6),
+                    (c/8e-6)) #mJy * Hz
+
+i3 = (i3[0] * u.mJy * u.Hz).to(u.mJy * u.GHz)
+dl = (luminosity_distance(6.4373) * u.Mpc).to(u.cm)
+tir_j2054 = (4*np.pi*(dl.value**2)*i3.value*1e-26*1e9)/(3.826*1e33)
+print(np.log10(tir_j2054),tir_j2054/1e12)
+
+
+exit()
+print("")
+t.dust_cont_integrate(mass_kgs_solar_conversion(0.35e8,'solar'),47,1.85,True)
+print("")
+#dust_integrated_luminosity(mass_kgs_solar_conversion(0.35e8,'solar'),47,1.85,'both',1)
+print("")
+dust_integrated_luminosity(dust_mass=mass_kgs_solar_conversion(ufloat(0.35e8,0.02e8),'solar'),
+                           dust_temp=ufloat(47,0),
+                           dust_beta=ufloat(1.85,0.3),
+                           lum='both',
+                           gmf=1)
+
 

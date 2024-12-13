@@ -348,11 +348,11 @@ plt.yscale('log')
 plt.xlabel(r"Observed Wavelength [$\mu$m]")
 plt.ylabel("Flux Density [mJy]")
 plt.legend()
-plt.title("HDF850.1")
+plt.title("HDF850.1 Fit")
 plt.show()
 
 
-exit()
+
 ########################################################################################################################
 
 print()

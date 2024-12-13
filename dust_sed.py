@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import scipy.constants
 from networkx.algorithms.bipartite.basic import color
 from scipy.optimize import curve_fit
 import interferopy.tools as iftools #(uses only numpy versions 1.x not 2.x)
@@ -7,6 +8,7 @@ import matplotlib.pyplot as plt
 from uncertainties import ufloat
 import utils as utils
 from lmfit import Model
+from scipy import integrate
 import astropy.units as u
 
 
@@ -363,7 +365,7 @@ j2310_flux = np.concatenate([wang_flux,tripodi_flux,sai_flux]) * 1e-29
 j2310_flux_err = np.concatenate([wang_flux_err,tripodi_flux_err,sai_flux_err])* 1e-29
 
 weights_j2310 = 1/j2310_flux_err
-result_j2310 = gm.fit(j2310_flux,params,nu_obs=j2310_hz,weights=weights_j2310)
+result_j2310 = gm.fit(j2310_flux,params,nu_obs=j2310_hz,weights=weights_j2310,scale_covar=False)
 print(result_j2310.fit_report())
 
 wave =  np.linspace(1e1,1e4,10000)
@@ -386,6 +388,37 @@ s_fit = utils.dust_s_obs(utils.mum_to_ghz(wave)*1e9, z = 6.0035,
                          output_unit_mjy=True)
 
 
+wave_ir  =  np.linspace(8,1e3,5000)
+freq_ir = utils.mum_to_ghz(wave_ir)
+
+i3 = integrate.quad(lambda freq: utils.dust_s_obs(freq, z = 6.0035,
+                         solid_angle=result_j2310.params["solid_angle"],
+                         mass_dust=result_j2310.params["mass_dust"],
+                         temp_dust=result_j2310.params['temp_dust'],
+                         beta=result_j2310.params['beta'],
+                         optically_thick_regime=True,
+                         output_unit_mjy=True),
+                    (scipy.constants.c/1000e-6),
+                    (scipy.constants.c/8e-6)) #mJy * Hz
+
+
+
+i3 = (i3[0] * u.mJy * u.Hz).to(u.mJy * u.GHz)
+
+dl = (utils.luminosity_distance(6.0035) * u.Mpc).to(u.cm)
+tir_j2054 = (4*np.pi*(dl.value**2)*i3.value*1e-26*1e9)/(3.826*1e33)/1e13
+
+
+
+"""
+This does not work, rework on this
+tir = utils.dust_integrated_luminsoity(dust_mass=ufloat(result_j2310.params["mass_dust"].value,result_j2310.params["mass_dust"].stderr),
+                                       dust_temp=ufloat(result_j2310.params["temp_dust"].value,result_j2310.params["temp_dust"].stderr),
+                                       dust_beta=ufloat(result_j2310.params["beta"].value,result_j2310.params["beta"].stderr),
+                                       lum='tir',
+                                       print_to_console=True)
+"""
+
 
 
 plt.scatter(wang_wave,wang_flux,label='Wang et al. 2008')
@@ -397,7 +430,8 @@ plt.plot(wave, s_tripodi,label='Tripodi et al. 2022',color='black',ls='--')
 plt.plot(wave,s_fit, label='Our Fit'
                            f'\nDust Mass = {utils.mass_kgs_solar_conversion(ufloat(result_j2310.params["mass_dust"].value,result_j2310.params["mass_dust"].stderr),unit_of_input_mass="kg")}'
                            f'\nDust Temp = {ufloat(result_j2310.params["temp_dust"].value,result_j2310.params["temp_dust"].stderr)} K'
-                           f'\nBeta = {ufloat(result_j2310.params["beta"].value,result_j2310.params["beta"].stderr)}',color='blue')
+                           f'\nBeta = {ufloat(result_j2310.params["beta"].value,result_j2310.params["beta"].stderr)}'
+                           f'\nL_TIR = {np.round(tir_j2054,2)}e+13 L⊙',color='blue')
 
 plt.xscale('log')
 plt.yscale('log')
@@ -405,12 +439,12 @@ plt.xlim(1e2,1e4)
 plt.ylim(1e-4, 10**3)
 plt.xlabel(r"Observed Wavelength [$\mu$m]")
 plt.ylabel("Flux Density [mJy]")
-plt.title("J2310-1855")
+plt.title("J2310-1855 Fit")
 plt.legend()
 plt.show()
 
 
-#exit()
+
 ##################################################################################################
 
 
@@ -507,11 +541,12 @@ utils.dust_integrated_luminsoity(dust_mass=utils.mass_kgs_solar_conversion(dust_
 plt.scatter(pssj_freq_wave,pssj_flux)
 plt.scatter(my_value_wave,my_value_flux,color='red',label='Our Value')
 plt.plot(wave,s_pssj_vary_mass,label=fr'Dust Mass = {dust_mass_solar_vary_mass} L_$\odot$'
-                                     f'\nDust Temp = {dust_temp_vary_mass} K (Stacey et al. 2018)'
-                                     f'\nBeta = 1.6')
+                                     f'\nDust Temp = {dust_temp_vary_mass} K (Fixed)'
+                                     f'\nBeta = 1.6 (Fixed)'
+                                     f'\nL_FIR = {ufloat(5.99e12,0.62e12)} L⊙')
 plt.plot(wave,s_pssj_vary_mass_and_temp,label=fr'Dust Mass = {dust_mass_solar_vary_mass_and_temp} L_$\odot$'
                                               f'\nDust Temp = {dust_temp_vary_mass_and_temp} K'
-                                              f'\nBeta = 1.6')
+                                              f'\nBeta = 1.6 (Fixed)')
 #plt.scatter(ghz_to_mum(np.array([1.4,5])),[9.8e-2,9e-2])
 plt.xlim(1e1,1e4)
 plt.ylim(1e-4, 10**3)
@@ -519,7 +554,7 @@ plt.xscale('log')
 plt.yscale('log')
 plt.xlabel(r"Observed Wavelength [$\mu$m]")
 plt.ylabel("Flux Density [mJy]")
-plt.title("PSSJ2322+1944")
+plt.title("PSSJ2322+1944 Fit")
 plt.legend()
 plt.show()
 
