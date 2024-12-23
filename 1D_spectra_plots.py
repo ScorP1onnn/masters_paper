@@ -135,7 +135,7 @@ err = 1.4
 print(err + (0.15*err))
 print(mean_spectrum_err(err))
 
-exit()
+#exit()
 
 
 
@@ -144,7 +144,7 @@ fig, ((ax1, ax2, ax3), (ax4,ax5,ax6)) = plt.subplots(2,3, figsize=(8, 8), tight_
 
 ax1.fill_between(vel_gn20,flux_gn20,16.2,step="pre", alpha=0.2,color="orange")
 ax1.step(vel_gn20,flux_gn20,drawstyle="steps-pre",color="orange")
-ax1.errorbar(vel_gn20[0],21,yerr=1.8 + (0.15*1.8),capsize=3,color='grey',marker='o')
+ax1.errorbar(vel_gn20[0],21,yerr=1.8 ,capsize=3,color='grey',marker='o')
 ax1.set_ylabel("Flux [mJy]",size=15)
 ax1.plot(vel_gn20,model([  16.06781383, 2415.0972588 ,   -4.24083208,  720.66451899],vel_gn20),color='darkblue')
 ax1_1 = ax1.twiny()
@@ -158,7 +158,7 @@ ax1.text(-2100,21.3,"GN20",size=15)
 
 ax2.fill_between(vel_id141,flux_id141, 57.09613459,step="pre", alpha=0.2,color="orange")
 ax2.step(vel_id141,flux_id141,drawstyle="steps-pre",color="orange")
-ax2.errorbar(vel_id141[0],74,yerr= 3.3 + (0.15*3.3),capsize=3,color='grey',marker='o')
+ax2.errorbar(vel_id141[0],74,yerr= 3.3 ,capsize=3,color='grey',marker='o')
 ax2.plot(vel_id141,best_fit_model,color='darkblue')
 ax2_1=ax2.twiny()
 ax2_1.step(freq_id141,flux_id141,color="orange")
@@ -170,7 +170,7 @@ ax2.text(-1800,72.5,"ID141",size=15)
 
 ax3.fill_between(vel_hdf,flux_hdf,2.0,step="pre", alpha=0.2,color="orange")
 ax3.step(vel_hdf,flux_hdf,drawstyle="steps-pre",color="orange")
-ax3.errorbar(vel_hdf[0],5,yerr=1.1+(0.15*1.1),capsize=3,color='grey',marker='o')
+ax3.errorbar(vel_hdf[0],5,yerr=1.1,capsize=3,color='grey',marker='o')
 ax3.errorbar(0,-0.7,xerr=300,capsize=15,color='black',elinewidth=4)
 ax3.axhline(2.0,linestyle='--', color='darkblue')
 ax3_1=ax3.twiny()
@@ -185,7 +185,7 @@ ax3.text(-2900,5.2,"HDF850.1",size=15)
 
 ax4.fill_between(vel_2322,flux_2322,out_velocity_2322.params['F'].value,step="pre", alpha=0.2,color="red")
 ax4.step(vel_2322,flux_2322,drawstyle="steps-pre",color="red")
-ax4.errorbar(vel_2322[0],24,yerr=2.8+(0.15*2.8),capsize=3,color='grey',marker='o')
+ax4.errorbar(vel_2322[0],24,yerr=2.8,capsize=3,color='grey',marker='o')
 ax4.plot(vel_2322,out_velocity_2322.best_fit,color='darkblue')
 ax4.set_xlabel(xat,size=15)
 ax4.set_ylabel(yat,size=15)
@@ -198,7 +198,7 @@ ax4.text(-2250,26,"PSSJ2322+1944",size=15)
 
 ax5.fill_between(vel_2054,flux_2054,0.8,step="pre", alpha=0.2,color="red")
 ax5.step(vel_2054,flux_2054,color='red')
-ax5.errorbar(vel_2054[3],3.1,yerr=1.1+(0.15*1.1),capsize=3,color='grey',marker='o')
+ax5.errorbar(vel_2054[3],3.1,yerr=1.1,capsize=3,color='grey',marker='o')
 ax5.errorbar(0,-2,xerr=400,capsize=15,color='black',elinewidth=4)
 ax5.axhline(0.8,linestyle='--', color='darkblue')
 ax5.set_xlabel(xat,size=15)
@@ -210,7 +210,7 @@ ax5.text(-1800,3.8,"J2054-0005",size=15)
 
 ax6.fill_between(vel_2310,flux_2310,5.5,step="pre", alpha=0.2,color="red")
 ax6.step(vel_2310,flux_2310,color='red')
-ax6.errorbar(vel_2310[0],8,yerr=1.4 + (0.15*1.4),capsize=3,color='grey',marker='o')
+ax6.errorbar(vel_2310[0],8,yerr=1.4,capsize=3,color='grey',marker='o')
 ax6.errorbar(0,2,xerr=200,capsize=15,color='black',elinewidth=4)
 ax6.axhline(5.5,linestyle='--', color='darkblue')
 ax6.set_xlabel(xat,size=15)
