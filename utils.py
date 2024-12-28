@@ -3,12 +3,12 @@ from uncertainties import ufloat, unumpy
 from math import *
 import scipy.constants as const
 from scipy.interpolate import CubicSpline, Akima1DInterpolator
-import astropy.units as u
 from astropy.cosmology import FlatLambdaCDM
 from scipy import integrate
 from scipy.constants import c
 import interferopy.tools as t
 from tqdm import tqdm
+import astropy.units as u
 
 def ghz_to_mum(frequency_GHz):
     return (const.c/frequency_GHz/1e9) * 1e6
@@ -22,7 +22,7 @@ def mass_kgs_solar_conversion(mass,unit_of_input_mass,power=False):
     solar_mass_kg = 1.989e+30 #Solar mass in kg
 
     if unit_of_input_mass == 'kg' or unit_of_input_mass == 'kgs':
-        print("Converting mass from kg to solar masses")
+        #print("Converting mass from kg to solar masses")
         m = mass / solar_mass_kg  # Convert kg to solar masses
         if power==False:
             return m
@@ -32,7 +32,7 @@ def mass_kgs_solar_conversion(mass,unit_of_input_mass,power=False):
 
 
     elif unit_of_input_mass == 'solar':
-        print("Converting mass from solar masses to kg")
+        #print("Converting mass from solar masses to kg")
         m = mass * solar_mass_kg
         return m
 
@@ -471,7 +471,8 @@ def dust_integrated_luminosity(dust_mass, dust_temp,dust_beta,
             integrals_error = np.std(integrals)
 
 
-            return ufloat(integrals_mean * u.W.to(u.solLum).value,integrals_error* u.W.to(u.solLum).value)
+            #return ufloat(integrals_mean * u.W.to(u.solLum).value,integrals_error* u.W.to(u.solLum).value)
+            return ufloat(integrals_mean * u.W.to(u.solLum), integrals_error * u.W.to(u.solLum))
 
     print("μ = ",gmf)
     if lum == 'tir' or lum=='ir' or lum == 'TIR' or lum == 'IR':
@@ -628,7 +629,7 @@ integrated_dust_luminosity(mass_dust=mass_dust,temp_dust=temp_dust,beta=beta,pri
 
 
 
-
+"""
 
 #To Test for IR luminosity Values
 
@@ -680,3 +681,4 @@ dust_integrated_luminosity(dust_mass=mass_kgs_solar_conversion(ufloat(0.35e8,0.0
                            gmf=1)
 
 
+"""
