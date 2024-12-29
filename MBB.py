@@ -28,9 +28,9 @@ def optically_thick_integral(z,dust_mass,dust_temp,dust_beta,solid_angle,lower_l
 def optically_thin_integral(dust_mass,dust_temp,dust_beta,lower_limit,upper_limit):
 
     integral = integrate.quad(lambda x: utils.dust_luminosity_one_freq_value(x,
-                                                                                 mass_dust=dust_mass,
-                                                                                 temp_dust=dust_temp,
-                                                                                 beta=dust_beta),lower_limit,upper_limit)[0]
+                                                                             mass_dust=dust_mass,
+                                                                             temp_dust=dust_temp,
+                                                                             beta=dust_beta),lower_limit,upper_limit)[0]
     return integral * u.W.to(u.solLum)
 
 
@@ -242,8 +242,8 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
         dust_temp_fixed: float = 37,
         dust_beta_fixed: float = 1.6,
 
-        nparams=3, params_type='mt',
-        solid_angle:float = 0., optically_thick_regime=False,
+        nparams: int = 3, params_type: str = 'mt',
+        solid_angle:float = 0., optically_thick_regime: bool = False,
 
 
         dust_mass_prior_distribution: str = 'flat',
@@ -252,15 +252,15 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
         solid_angle_prior_distribution: str = 'flat',
 
 
-        dust_mass_limit = [1e6,1e11],
-        dust_temp_limit = [25.,40.],
-        dust_beta_limit = [1.5,2.5],
-        solid_angle_limit = [0.,1.],
+        dust_mass_limit = None,
+        dust_temp_limit = None,
+        dust_beta_limit = None,
+        solid_angle_limit = None,
 
-        nwalkers:int = 50,
-        initial_guess_values = [1e8, 30, 2, 0.1],
-        nsteps:int = 1000,
-        plot_corner=False
+        nwalkers: int = 50,
+        initial_guess_values = None,
+        nsteps: int = 1000,
+        plot_corner: bool = False
         ):
 
     """
@@ -289,19 +289,19 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
     :param solid_angle_prior_distribution: 'flat' or 'gaussian' or 'log_normal' distribution
 
     :param dust_mass_limit: limits within which emcee should search for dust mass
-                            'flat': [lower limit, upperr limit]
+                            'flat': [lower limit, upper limit]
                             'gauss' or 'gaussian': [mean, std (or width)]
                             'log_n' or 'log_normal': [mean, std (or width)]
     :param dust_temp_limit: limits within which emcee should search for dust temperature
-                            'flat': [lower limit, upperr limit]
+                            'flat': [lower limit, upper limit]
                             'gauss' or 'gaussian': [mean, std (or width)]
                             'log_n' or 'log_normal': [mean, std (or width)]
     :param dust_beta_limit: limits within which emcee should search for beta
-                            'flat': [lower limit, upperr limit]
+                            'flat': [lower limit, upper limit]
                             'gauss' or 'gaussian': [mean, std (or width)]
                             'log_n' or 'log_normal': [mean, std (or width)]
     :param solid_angle_limit: limits within which emcee should search for solid angle
-                            'flat': [lower limit, upperr limit]
+                            'flat': [lower limit, upper limit]
                             'gauss' or 'gaussian': [mean, std (or width)]
                             'log_n' or 'log_normal': [mean, std (or width)]
 
@@ -312,6 +312,30 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
     :return: Dictionary containing MBB derived values and their 1-sigma posterior limits, TIR and FIR and their limits
     """
 
+    if dust_mass_limit is None:
+        dust_mass_limit = [1e6, 1e11]
+    if not isinstance(dust_mass_limit, list):
+        raise TypeError("dust_mass_limit must be a list.")
+
+    if dust_temp_limit is None:
+        dust_temp_limit = [25.,40.]
+    if not isinstance(dust_temp_limit, list):
+        raise TypeError("dust_temp_limit must be a list.")
+
+    if dust_beta_limit is None:
+        dust_beta_limit = [1.5, 2.5]
+    if not isinstance(dust_beta_limit, list):
+        raise TypeError("dust_beta_limit must be a list.")
+
+    if solid_angle_limit is None:
+        solid_angle_limit = [0.,1.]
+    if not isinstance(solid_angle_limit, list):
+        raise TypeError("solid_angle_limit must be a list.")
+
+    if initial_guess_values is None:
+        initial_guess_values = [1e8, 30, 2, 0.1]
+    if not isinstance(initial_guess_values, list):
+        raise TypeError("initial_guess_values must be a list.")
 
     sampler = mbb_emcee(nu_obs, z, flux_obs, flux_err, dust_mass_fixed, dust_temp_fixed, dust_beta_fixed,
             nparams, params_type, solid_angle, optically_thick_regime,
