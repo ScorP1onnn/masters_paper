@@ -32,7 +32,31 @@ def optically_thin_integral(dust_mass,dust_temp,dust_beta,lower_limit,upper_limi
                                                                              mass_dust=dust_mass,
                                                                              temp_dust=dust_temp,
                                                                              beta=dust_beta),lower_limit,upper_limit)[0]
-    return integral * u.W.to(u.solLum)
+    return integral * u.W.to(u.solLum) # Lsun
+
+
+
+def dust_integrated_luminosity(z,dust_mass,dust_temp,dust_beta,solid_angle,optically_thick_regime=False,lum='both'):
+    tir_lower_limit = constants.c / (1000e-6)  # Convert to frequency for integration
+    tir_upper_limit = constants.c / (8e-6)
+
+    fir_lower_limit = constants.c / (122.5e-6)  # Convert to frequency for integration
+    fir_upper_limit = constants.c / (42.5e-6)
+
+    if optically_thick_regime == True:
+        tir_lum = optically_thick_integral(z,dust_mass,dust_temp,dust_beta,solid_angle,tir_lower_limit,tir_upper_limit) # Lsun
+        fir_lum = optically_thick_integral(z, dust_mass, dust_temp, dust_beta, solid_angle, fir_lower_limit,fir_upper_limit) # Lsun
+    else:
+        tir_lum = optically_thin_integral(dust_mass,dust_temp,dust_beta,tir_lower_limit,tir_upper_limit) # Lsun
+        fir_lum = optically_thin_integral(dust_mass, dust_temp, dust_beta, fir_lower_limit, fir_upper_limit) # Lsun
+
+    if lum.lower() == 'tir' or lum.lower() == 'ir':
+        return tir_lum
+    elif lum.lower() == 'fir':
+        return fir_lum
+    elif lum.lower() == 'both':
+        return tir_lum, fir_lum
+
 
 
 
@@ -355,7 +379,7 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
     :param nwalkers: Number of walkers
     :param initial_guess_values: initial guess priors
     :param nsteps: Number of iterations
-    :param plot_corner: Plot Corner plot
+    :param corner_plot: Plot Corner plot
     :return: Dictionary containing MBB derived values and their 1-sigma posterior limits, TIR and FIR and their limits
     """
 
@@ -423,87 +447,51 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
     L_TIR_samples = []
     L_FIR_samples = []
 
-    tir_lower_limit = constants.c / (1000e-6)  # Convert to frequency for integration
-    tir_upper_limit = constants.c / (8e-6)
-    fir_lower_limit = constants.c / (122.5e-6)  # Convert to frequency for integration
-    fir_upper_limit = constants.c / (42.5e-6)
-
     if corner_plot == True and nparams>1:
         print("Generating corner plots...")
 
     if nparams == 1:
         param_names = [r"dust_mass", 'μTIR x 10^13', 'μFIR x 10^13']
         for sample in flat_samples:
-
-            if optically_thick_regime==True:
-                L_TIR_samples.append(optically_thick_integral(z=z,dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'),dust_temp=dust_temp_fixed,dust_beta=dust_beta_fixed,
-                                                              solid_angle=solid_angle,lower_limit=tir_lower_limit,upper_limit=tir_upper_limit)) #Lsun
-                L_FIR_samples.append(optically_thick_integral(z=z,dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'),dust_temp=dust_temp_fixed,dust_beta=dust_beta_fixed,
-                                                              solid_angle=solid_angle,lower_limit=fir_lower_limit,upper_limit=fir_upper_limit))
-            else:
-                L_TIR_samples.append(optically_thin_integral(dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'),dust_temp=dust_temp_fixed,dust_beta=dust_beta_fixed,
-                                                             lower_limit=tir_lower_limit,upper_limit=tir_upper_limit))
-                L_FIR_samples.append(optically_thin_integral(dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'),dust_temp=dust_temp_fixed,dust_beta=dust_beta_fixed,
-                                                             lower_limit=fir_lower_limit,upper_limit=fir_upper_limit))
-
+            L_TIR_samples.append(dust_integrated_luminosity(z=z,dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'),dust_temp=dust_temp_fixed,dust_beta=dust_beta_fixed,
+                                                            solid_angle=solid_angle,optically_thick_regime=optically_thick_regime,lum='tir'))
+            L_FIR_samples.append(dust_integrated_luminosity(z=z,dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'),dust_temp=dust_temp_fixed,dust_beta=dust_beta_fixed,
+                                                            solid_angle=solid_angle,optically_thick_regime=optically_thick_regime,lum='fir'))
 
     elif nparams == 2:
         if params_type.lower() == 'mt':
             param_names = ["dust_mass", "dust_temp", 'μTIR x 10^13', 'μFIR x 10^13']
             corner_labels = [r"log($M_{\mathrm{dust}}$) [$M_\odot$]", r"$T_{\mathrm{dust}}$ [K]"]
             for sample in flat_samples:
-                if optically_thick_regime == True:
-                    L_TIR_samples.append(optically_thick_integral(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=sample[1], dust_beta=dust_beta_fixed,
-                                                                  solid_angle=solid_angle, lower_limit=tir_lower_limit,upper_limit=tir_upper_limit))  # Lsun
-                    L_FIR_samples.append(optically_thick_integral(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=sample[1], dust_beta=dust_beta_fixed,
-                                                                  solid_angle=solid_angle, lower_limit=fir_lower_limit,upper_limit=fir_upper_limit))
-                else:
-                    L_TIR_samples.append(optically_thin_integral(dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=sample[1], dust_beta=dust_beta_fixed,
-                                                                 lower_limit=tir_lower_limit, upper_limit=tir_upper_limit))
-                    L_FIR_samples.append(optically_thin_integral(dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=sample[1], dust_beta=dust_beta_fixed,
-                                                                 lower_limit=fir_lower_limit, upper_limit=fir_upper_limit))
+                L_TIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=sample[1], dust_beta=dust_beta_fixed,
+                                                                solid_angle=solid_angle,optically_thick_regime=optically_thick_regime, lum='tir'))
+                L_FIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=sample[1], dust_beta=dust_beta_fixed,
+                                                                solid_angle=solid_angle,optically_thick_regime=optically_thick_regime, lum='fir'))
+
         elif params_type.lower() == 'mb':
             param_names = ["dust_mass", "dust_beta", 'μTIR x 10^13', 'μFIR x 10^13']
             corner_labels = [r"log($M_{\mathrm{dust}}$) [$M_\odot$]", r"$\beta_{\mathrm{dust}}$"]
             for sample in flat_samples:
-                if optically_thick_regime == True:
-                    L_TIR_samples.append(optically_thick_integral(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=dust_temp_fixed, dust_beta=sample[1],
-                                                                  solid_angle=solid_angle, lower_limit=tir_lower_limit,upper_limit=tir_upper_limit))  # Lsun
-                    L_FIR_samples.append(optically_thick_integral(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=dust_temp_fixed, dust_beta=sample[1],
-                                                                  solid_angle=solid_angle, lower_limit=fir_lower_limit,upper_limit=fir_upper_limit))
-                else:
-                    L_TIR_samples.append(optically_thin_integral(dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=dust_temp_fixed, dust_beta=sample[1],
-                                                                 lower_limit=tir_lower_limit, upper_limit=tir_upper_limit))
-                    L_FIR_samples.append(optically_thin_integral(dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=dust_temp_fixed, dust_beta=sample[1],
-                                                                 lower_limit=fir_lower_limit, upper_limit=fir_upper_limit))
-
-
+                L_TIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=dust_temp_fixed, dust_beta=sample[1],
+                                                                solid_angle=solid_angle,optically_thick_regime=optically_thick_regime, lum='tir'))
+                L_FIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=dust_temp_fixed, dust_beta=sample[1],
+                                                                solid_angle=solid_angle,optically_thick_regime=optically_thick_regime, lum='fir'))
     elif nparams == 3:
         param_names = ["dust_mass", "dust_temp", "dust_beta", 'μTIR x 10^13', 'μFIR x 10^13']
         corner_labels = [r"log($M_{\mathrm{dust}}$) [$M_\odot$]", r"$T_{\mathrm{dust}}$ [K]", r"$\beta_{\mathrm{dust}}$"]
         for sample in flat_samples:
-            if optically_thick_regime == True:
-                L_TIR_samples.append(optically_thick_integral(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=sample[1], dust_beta=sample[2],
-                                                              solid_angle=solid_angle, lower_limit=tir_lower_limit,upper_limit=tir_upper_limit))  # Lsun
-                L_FIR_samples.append(optically_thick_integral(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=sample[1], dust_beta=sample[2],
-                                                              solid_angle=solid_angle, lower_limit=fir_lower_limit,upper_limit=fir_upper_limit))
-            else:
-                L_TIR_samples.append(optically_thin_integral(dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=sample[1], dust_beta=sample[2],
-                                                             lower_limit=tir_lower_limit, upper_limit=tir_upper_limit))
-                L_FIR_samples.append(optically_thin_integral(dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=sample[1], dust_beta=sample[2],
-                                                             lower_limit=fir_lower_limit, upper_limit=fir_upper_limit))
-
-
+            L_TIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=sample[1], dust_beta=sample[2],
+                                                            solid_angle=solid_angle, optically_thick_regime=optically_thick_regime,lum='tir'))
+            L_FIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=sample[1], dust_beta=sample[2],
+                                                            solid_angle=solid_angle, optically_thick_regime=optically_thick_regime,lum='fir'))
     elif nparams == 4:
         param_names = ["dust_mass", "dust_temp", "dust_beta", 'solid_angle', 'μTIR x 10^13', 'μFIR x 10^13']
         corner_labels = [r"log($M_{\mathrm{dust}}$) [$M_\odot$]", r"$T_{\mathrm{dust}}$ [K]", r"$\beta_{\mathrm{dust}}$", r"$\Omega_{\mathrm{S}}$"]
         for sample in flat_samples:
-            if optically_thick_regime == True:
-                L_TIR_samples.append(optically_thick_integral(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=sample[1], dust_beta=sample[2],
-                                                              solid_angle=sample[3], lower_limit=tir_lower_limit,upper_limit=tir_upper_limit))  # Lsun
-                L_FIR_samples.append(optically_thick_integral(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=sample[1], dust_beta=sample[2],
-                                                              solid_angle=sample[3], lower_limit=fir_lower_limit,upper_limit=fir_upper_limit))
-
+            L_TIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),
+                                                            dust_temp=sample[1], dust_beta=sample[2],solid_angle=sample[3], optically_thick_regime=optically_thick_regime,lum='tir'))
+            L_FIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=sample[1], dust_beta=sample[2],
+                                                            solid_angle=sample[3], optically_thick_regime=optically_thick_regime,lum='fir'))
 
     if corner_plot == True and nparams>1:
         corner_flat_samples = flat_samples.copy()
@@ -749,13 +737,19 @@ plt.show()
 
 print("HDF850.1")
 
-iftools.dust_cont_integrate(utils.mass_kgs_solar_conversion(1.1e9 * 2.3,'solar'),
-                            30.86,
+iftools.dust_cont_integrate(utils.mass_kgs_solar_conversion(0.72e9 ,'solar'),
+                            35,
                             2.50,
                             True)
 
 print("")
+iftools.dust_cont_integrate(utils.mass_kgs_solar_conversion(1.11e9,'solar'),
+                            30.72,
+                            2.50,
+                            True)
 
+print("")
+exit()
 
 #https://arxiv.org/pdf/1206.2641
 walter_freq = np.array([307.383,111.835,37.286])
@@ -873,6 +867,7 @@ x_stats_m = mbb_values(nu_obs=hdf_freq_hz,
                      flat_samples_discarded=300,
                      trace_plots=True,
                      corner_plot=True)
+
 
 print('dust_mass & dust_temp')
 x_stats_mt = mbb_values(nu_obs=hdf_freq_hz,
