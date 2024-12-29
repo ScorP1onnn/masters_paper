@@ -28,9 +28,9 @@ def optically_thick_integral(z,dust_mass,dust_temp,dust_beta,solid_angle,lower_l
 def optically_thin_integral(dust_mass,dust_temp,dust_beta,lower_limit,upper_limit):
 
     integral = integrate.quad(lambda x: utils.dust_luminosity_one_freq_value(x,
-                                                                                 mass_dust=dust_mass,
-                                                                                 temp_dust=dust_temp,
-                                                                                 beta=dust_beta),lower_limit,upper_limit)[0]
+                                                                             mass_dust=dust_mass,
+                                                                             temp_dust=dust_temp,
+                                                                             beta=dust_beta),lower_limit,upper_limit)[0]
     return integral * u.W.to(u.solLum)
 
 
@@ -85,7 +85,9 @@ def mbb_emcee(nu_obs, z, flux_obs, flux_err, dust_mass, dust_temp, dust_beta,
 
             nwalkers,
             initial_guess_values,
-            nsteps
+            nsteps,
+            flat_samples_discarded,
+            trace_plots
             ):
 
     def log_likelihood(params):
@@ -217,20 +219,48 @@ def mbb_emcee(nu_obs, z, flux_obs, flux_err, dust_mass, dust_temp, dust_beta,
 
     # Set up the MCMC sampler
     ndim = nparams
+    dust_mass_rescale = int((np.log10(dust_mass_limit[0]) + np.log10(dust_mass_limit[1]))/2)
     if params_type == 'mb':
         initial_guesses = np.asarray([initial_guess_values[0],initial_guess_values[2]])
+        trace_label = ['dust_mass','dust_beta']
     else:
-        initial_guesses = np.asarray(initial_guess_values[:ndim])
+        #initial_guesses = np.asarray(initial_guess_values[:ndim])
+        initial_guesses = np.concatenate( (np.asarray([initial_guess_values[0] / 10**dust_mass_rescale]), np.asarray(initial_guess_values[1:ndim])),axis=0)
+        trace_label = ['dust_mass', 'dust_temp','dust_beta', 'solid_angle'][:ndim]
 
-
-    pos = initial_guesses + 1e-1 * np.random.randn(nwalkers, ndim) # Initial positions
-
+    pos = initial_guesses + 1e-2 * np.random.randn(nwalkers, ndim) # Initial positions
+    pos[:,0] = pos[:,0] * 10**dust_mass_rescale
 
     # Initialize the sampler
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior) #, args=(nu_obs,flux_obs, flux_err)
 
     # Run the MCMC
     sampler.run_mcmc(pos, nsteps, progress=True)
+
+    # Check 1: Autocorrelation time
+    try:
+        tau = sampler.get_autocorr_time(discard=flat_samples_discarded, quiet=True)
+        print(f"Autocorrelation time: {tau}")
+        if nsteps < 10 * np.max(tau):
+            print("Warning: nsteps may not be sufficient. Consider increasing it.")
+    except emcee.autocorr.AutocorrError:
+        print("Autocorrelation time could not be estimated. Chains may not have converged.")
+
+    if trace_plots == True:
+        # Check 2: Trace plots
+        print("Generating trace plots...")
+        samples = sampler.get_chain()  # Get the raw samples
+        fig, axes = plt.subplots(ndim, figsize=(10, 7), sharex=True)
+        labels = trace_label
+        for i in range(ndim):
+            ax = axes[i]
+            for walker in samples[:, :, i].T:  # Loop over walkers
+                ax.plot(walker, alpha=0.5)
+            ax.set_ylabel(labels[i])
+        axes[-1].set_xlabel("Step number")
+        plt.show()
+
+
 
 
     return sampler
@@ -242,8 +272,8 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
         dust_temp_fixed: float = 37,
         dust_beta_fixed: float = 1.6,
 
-        nparams=3, params_type='mt',
-        solid_angle:float = 0., optically_thick_regime=False,
+        nparams: int = 3, params_type: str = 'mt',
+        solid_angle:float = 0., optically_thick_regime: bool = False,
 
 
         dust_mass_prior_distribution: str = 'flat',
@@ -252,15 +282,17 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
         solid_angle_prior_distribution: str = 'flat',
 
 
-        dust_mass_limit = [1e6,1e11],
-        dust_temp_limit = [25.,40.],
-        dust_beta_limit = [1.5,2.5],
-        solid_angle_limit = [0.,1.],
+        dust_mass_limit = None,
+        dust_temp_limit = None,
+        dust_beta_limit = None,
+        solid_angle_limit = None,
 
-        nwalkers:int = 50,
-        initial_guess_values = [1e8, 30, 2, 0.1],
-        nsteps:int = 1000,
-        plot_corner=False
+        nwalkers: int = 50,
+        initial_guess_values = None,
+        nsteps: int = 1000,
+        flat_samples_discarded: int = 200,
+        trace_plots: bool = True,
+        corner_plot: bool = False
         ):
 
     """
@@ -270,9 +302,14 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
     :param z: Redshift
     :param flux_obs: Observed Flux in units W/Hz/m^2
     :param flux_err: Observed Flux error in units W/Hz/m^2
+
     :param dust_mass_fixed: Fixed dust mass value in solar masses (solar masses will be converted to kg in mbb.emcee function)
+                            Keep it to 0 if you want to use dust_mass as a variable parameter
     :param dust_temp_fixed: Fixed dust temperature value in K
+                            Keep it to 0 if you want to use dust_mass as a variable parameter
     :param dust_beta_fixed: Fixed beta value
+                            Keep it to 0 if you want to use dust_mass as a variable parameter
+
     :param nparams: Number of variable parameters.
                     1: Only dust mass
                     2: ['mt' : dust mass and dust temperature]; ['mb': dust mass and beta]
@@ -289,19 +326,19 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
     :param solid_angle_prior_distribution: 'flat' or 'gaussian' or 'log_normal' distribution
 
     :param dust_mass_limit: limits within which emcee should search for dust mass
-                            'flat': [lower limit, upperr limit]
+                            'flat': [lower limit, upper limit]
                             'gauss' or 'gaussian': [mean, std (or width)]
                             'log_n' or 'log_normal': [mean, std (or width)]
     :param dust_temp_limit: limits within which emcee should search for dust temperature
-                            'flat': [lower limit, upperr limit]
+                            'flat': [lower limit, upper limit]
                             'gauss' or 'gaussian': [mean, std (or width)]
                             'log_n' or 'log_normal': [mean, std (or width)]
     :param dust_beta_limit: limits within which emcee should search for beta
-                            'flat': [lower limit, upperr limit]
+                            'flat': [lower limit, upper limit]
                             'gauss' or 'gaussian': [mean, std (or width)]
                             'log_n' or 'log_normal': [mean, std (or width)]
     :param solid_angle_limit: limits within which emcee should search for solid angle
-                            'flat': [lower limit, upperr limit]
+                            'flat': [lower limit, upper limit]
                             'gauss' or 'gaussian': [mean, std (or width)]
                             'log_n' or 'log_normal': [mean, std (or width)]
 
@@ -312,6 +349,30 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
     :return: Dictionary containing MBB derived values and their 1-sigma posterior limits, TIR and FIR and their limits
     """
 
+    if dust_mass_limit is None:
+        dust_mass_limit = [1e6, 1e11]
+    if not isinstance(dust_mass_limit, list):
+        raise TypeError("dust_mass_limit must be a list.")
+
+    if dust_temp_limit is None:
+        dust_temp_limit = [25.,40.]
+    if not isinstance(dust_temp_limit, list):
+        raise TypeError("dust_temp_limit must be a list.")
+
+    if dust_beta_limit is None:
+        dust_beta_limit = [1.5, 2.5]
+    if not isinstance(dust_beta_limit, list):
+        raise TypeError("dust_beta_limit must be a list.")
+
+    if solid_angle_limit is None:
+        solid_angle_limit = [0.,1.]
+    if not isinstance(solid_angle_limit, list):
+        raise TypeError("solid_angle_limit must be a list.")
+
+    if initial_guess_values is None:
+        initial_guess_values = [1e8, 30, 2, 0.1]
+    if not isinstance(initial_guess_values, list):
+        raise TypeError("initial_guess_values must be a list.")
 
     sampler = mbb_emcee(nu_obs, z, flux_obs, flux_err, dust_mass_fixed, dust_temp_fixed, dust_beta_fixed,
             nparams, params_type, solid_angle, optically_thick_regime,
@@ -327,9 +388,11 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
 
             nwalkers,
             initial_guess_values,
-            nsteps)
+            nsteps,
+            flat_samples_discarded,
+            trace_plots)
 
-    flat_samples = sampler.get_chain(discard=int(0.2 * nwalkers), thin=10, flat=True)
+    flat_samples = sampler.get_chain(discard=flat_samples_discarded, thin=10, flat=True)
 
     percentiles = [16, 50, 84]  # 1-sigma percentiles
     stats = {}
@@ -387,16 +450,12 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
                                                                  lower_limit=fir_lower_limit, upper_limit=fir_upper_limit))
 
 
-            if plot_corner==True:
+            if corner_plot==True:
                 corner_flat_samples = flat_samples.copy()
                 corner_flat_samples[:, 0] = np.log10(corner_flat_samples[:, 0])  # np.log(dust_mass)
                 corner_labels = [r"log($M_{\mathrm{dust}}$) [$M_\odot$]", r"$T_{\mathrm{dust}}$ [K]"]
                 corner.corner(corner_flat_samples,labels=corner_labels,show_titles=True,plot_datapoints=True,quantiles=[0.16, 0.5, 0.84],title_fmt=".2f")
                 plt.show()
-
-
-
-
 
             flat_samples = np.column_stack((flat_samples, np.asarray(L_TIR_samples)/1e13, np.asarray(L_FIR_samples)/1e13))
             param_names = ["dust_mass", "dust_temp", 'TIR x 10^13', 'FIR x 10^13']
@@ -424,6 +483,13 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
                     L_FIR_samples.append(optically_thin_integral(dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=dust_temp_fixed, dust_beta=sample[1],
                                                                  lower_limit=fir_lower_limit, upper_limit=fir_upper_limit))
 
+            if corner_plot==True:
+                corner_flat_samples = flat_samples.copy()
+                corner_flat_samples[:, 0] = np.log10(corner_flat_samples[:, 0])  # np.log(dust_mass)
+                corner_labels = [r"log($M_{\mathrm{dust}}$) [$M_\odot$]", r"$\beta_{\mathrm{dust}}$"]
+                corner.corner(corner_flat_samples, labels=corner_labels, show_titles=True, plot_datapoints=True,quantiles=[0.16, 0.5, 0.84], title_fmt=".2f")
+                plt.show()
+
             flat_samples = np.column_stack((flat_samples, np.asarray(L_TIR_samples)/1e13, np.asarray(L_FIR_samples)/1e13))
             param_names = ["dust_mass", "dust_beta", 'TIR x 10^13', 'FIR x 10^13']
             for i, name in enumerate(param_names):
@@ -448,6 +514,12 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
                                                              lower_limit=tir_lower_limit, upper_limit=tir_upper_limit))
                 L_FIR_samples.append(optically_thin_integral(dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=sample[1], dust_beta=sample[2],
                                                              lower_limit=fir_lower_limit, upper_limit=fir_upper_limit))
+        if corner_plot == True:
+            corner_flat_samples = flat_samples.copy()
+            corner_flat_samples[:, 0] = np.log10(corner_flat_samples[:, 0])  # np.log(dust_mass)
+            corner_labels = [r"log($M_{\mathrm{dust}}$) [$M_\odot$]", r"$T_{\mathrm{dust}}$ [K]", r"$\beta_{\mathrm{dust}}$"]
+            corner.corner(corner_flat_samples, labels=corner_labels, show_titles=True, plot_datapoints=True,quantiles=[0.16, 0.5, 0.84], title_fmt=".2f")
+            plt.show()
 
         flat_samples = np.column_stack((flat_samples, np.asarray(L_TIR_samples)/1e13, np.asarray(L_FIR_samples)/1e13))
         param_names = ["dust_mass", "dust_temp", "dust_beta", 'TIR x 10^13', 'FIR x 10^13']
@@ -469,6 +541,13 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
                 L_FIR_samples.append(optically_thick_integral(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'), dust_temp=sample[1], dust_beta=sample[2],
                                                               solid_angle=sample[3], lower_limit=fir_lower_limit,upper_limit=fir_upper_limit))
 
+        if corner_plot == True:
+            corner_flat_samples = flat_samples.copy()
+            corner_flat_samples[:, 0] = np.log10(corner_flat_samples[:, 0])  # np.log(dust_mass)
+            corner_labels = [r"log($M_{\mathrm{dust}}$) [$M_\odot$]", r"$T_{\mathrm{dust}}$ [K]", r"$\beta_{\mathrm{dust}}$", r"$\Omega_{\mathrm{S}}$"]
+            corner.corner(corner_flat_samples, labels=corner_labels, show_titles=True, plot_datapoints=True,quantiles=[0.16, 0.5, 0.84], title_fmt=".2f")
+            plt.show()
+
         flat_samples = np.column_stack((flat_samples, np.asarray(L_TIR_samples)/1e13, np.asarray(L_FIR_samples)/1e13))
         param_names = ["dust_mass", "dust_temp", "dust_beta", 'solid_angle', 'TIR x 10^13', 'FIR x 10^13']
         for i, name in enumerate(param_names):
@@ -482,14 +561,17 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
 
     print("")
     for name, values in stats.items():
-        print(f"{name}: {values['median']:.2f} (+{values['upper_1sigma']:.2f}, -{values['lower_1sigma']:.2f})")
+        if name.lower() == 'dust_mass':
+            print(f"{name} x 10^9: {values['median']/1e9:.2f} (+{values['upper_1sigma']/1e9:.2f}, -{values['lower_1sigma']/1e9:.2f})")
+        else:
+            print(f"{name}: {values['median']:.2f} (+{values['upper_1sigma']:.2f}, -{values['lower_1sigma']:.2f})")
 
 
     return stats
 
 
 
-def mbb_best_fit(nu,z,stats: dict = None, dust_mass_default: float = 1e8, dust_temp_default: float= 35, dust_beta_default: float=1.6,
+def mbb_best_fit_flux(nu,z,stats: dict = None, dust_mass_default: float = 1e8, dust_temp_default: float= 35, dust_beta_default: float=1.6,
             solid_angle_default: float = 0.0, optically_thick_regime=False,output_unit_mjy=True):
     # Retrieve values from stats or use defaults
     dust_mass_median = stats.get('dust_mass', {}).get('median', dust_mass_default)
@@ -526,6 +608,8 @@ def mbb_best_fit(nu,z,stats: dict = None, dust_mass_default: float = 1e8, dust_t
 
 print("MBB.py")
 
+"""
+#GN20
 gn20_wave_mum = np.array([100,160,250,350,500,850,880,1100,2200,3300,3050,1860])
 gn20_flux = np.array([0.7,5.4,18.6,41.3,39.7,20.3,16,10.7,0.9,0.33,0.36,2.8])
 gn20_flux_err = np.array([0.4,1.0,2.7,5.2,6.1,2.0,1.0,1.0,0.15,0.06,0.05,0.13])
@@ -536,8 +620,10 @@ my_value_gn20_flux = np.array([16.2])
 my_value_gn20_flux_err = np.array([2.5])
 my_value_gn20_wave_mum = utils.ghz_to_mum(my_value_gn20_freq)
 
+
 plt.scatter(gn20_wave_mum,gn20_flux)
 plt.scatter(my_value_gn20_wave_mum,my_value_gn20_flux,color='red')
+
 
 plt.xlim(1e1,1e4)
 plt.ylim(1e-4, 10**3)
@@ -564,23 +650,24 @@ x_stats = mbb_values(nu_obs=gn20_freq_hz,
            z=4.0553,
            flux_obs=gn20_flux,
            flux_err=gn20_flux_err,
-           dust_mass=0,
-           dust_temp=0,
-           dust_beta=1.95,
+           dust_mass_fixed=0,
+           dust_temp_fixed=0,
+           dust_beta_fixed=1.95,
            nparams=2,
            params_type='mt',
            optically_thick_regime=False,
            dust_mass_limit=[1e8,1e11],
            dust_temp_limit=[25,40],
            initial_guess_values = [1e9,30],
-           plot=False,
-           nsteps=1000)
+           corner_plot=True,
+           nsteps=1000,
+           trace_plots=True)
 
 
 
 wave = np.linspace(1e1,1e4,10000)
-f = mbb_best_fit(nu=utils.mum_to_ghz(wave)*1e9,z=4.0553, stats=x_stats,dust_beta_default=1.95,
-                 optically_thick_regime=False,output_unit_mjy=True)
+f = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,z=4.0553, stats=x_stats,dust_beta_default=1.95,
+                      optically_thick_regime=False,output_unit_mjy=True)
 
 
 plt.scatter(gn20_wave_mum,gn20_flux*1e29,color='black')
@@ -597,7 +684,76 @@ plt.legend()
 plt.title("GN20 Fit")
 plt.show()
 
+exit()
+"""
+
+print('ID141')
+#https://iopscience.iop.org/article/10.1088/0004-637X/740/2/63/pdf
+id141_wave = np.array([250,350,500,870,880,1200,1950,2750,3000,3290])
+id141_flux = np.array([115,192,204,102,90,36,9.7,1.8,1.6,1.2])
+id141_flux_err = np.array([19,30,32,8.8,5,2,0.9,0.3,0.2,0.1])
+id141_freq_ghz = utils.mum_to_ghz(id141_wave)
+
+my_value_freq = np.array([1461.134/(1+4.24)])
+my_value_flux = np.array([57])
+my_value_flux_err = np.array([8.6])
+
+id141_freq_hz = np.concatenate([id141_freq_ghz,my_value_freq]) * 1e9 #Convert to Hz
+id141_flux = np.concatenate([id141_flux,my_value_flux]) * 1e-29 #Convert to to W/Hz/m2
+id141_flux_err = np.concatenate([id141_flux_err,my_value_flux_err]) * 1e-29  #Convert to to W/Hz/m2
+id141_wave = np.concatenate([id141_wave,utils.ghz_to_mum(my_value_freq)])
+
+"""
+plt.scatter(id141_wave,id141_flux * 1e29)
+plt.xlim(1e2,5e3)
+plt.ylim(1e-4, 10**3)
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel(r"Observed Wavelength [$\mu$m]")
+plt.ylabel("Flux Density [mJy]")
+#plt.axvline(utils.ghz_to_mum(cheng2019_freq))
+plt.legend()
+plt.show()
+"""
+
+z_id141 = 4.24
+x_stats = mbb_values(nu_obs=id141_freq_hz,
+                     z=z_id141,
+                     flux_obs=id141_flux,
+                     flux_err=id141_flux_err,
+                     dust_mass_fixed=0,
+                     dust_temp_fixed=0,
+                     dust_beta_fixed=1.8,
+                     nparams=2,
+                     params_type='mt',
+                     optically_thick_regime=False,
+                     dust_mass_limit=[1e8,1e10],
+                     dust_temp_limit=[30,45],
+                     initial_guess_values = [1e9,38],
+                     nsteps=1000,
+                     flat_samples_discarded=300,
+                     trace_plots=True,
+                     corner_plot=True)
+
+wave = np.linspace(1e1,1e4,10000)
+f_id141 = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,
+                      z=z_id141,
+                      stats=x_stats,
+                      dust_beta_default=1.8,
+                      optically_thick_regime=False,
+                      output_unit_mjy=True)
 
 
+plt.scatter(id141_wave,id141_flux * 1e29)
+plt.scatter(utils.ghz_to_mum(my_value_freq), my_value_flux,color='red',label='Our Value')
+plt.plot(wave,f_id141)
 
-
+plt.xlim(1e2,5e3)
+plt.ylim(1e-4, 10**3)
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel(r"Observed Wavelength [$\mu$m]")
+plt.ylabel("Flux Density [mJy]")
+#plt.axvline(utils.ghz_to_mum(cheng2019_freq))
+plt.legend()
+plt.show()
