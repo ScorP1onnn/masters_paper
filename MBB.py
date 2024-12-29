@@ -270,9 +270,14 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
     :param z: Redshift
     :param flux_obs: Observed Flux in units W/Hz/m^2
     :param flux_err: Observed Flux error in units W/Hz/m^2
+
     :param dust_mass_fixed: Fixed dust mass value in solar masses (solar masses will be converted to kg in mbb.emcee function)
+                            Keep it to 0 if you want to use dust_mass as a variable parameter
     :param dust_temp_fixed: Fixed dust temperature value in K
+                            Keep it to 0 if you want to use dust_mass as a variable parameter
     :param dust_beta_fixed: Fixed beta value
+                            Keep it to 0 if you want to use dust_mass as a variable parameter
+
     :param nparams: Number of variable parameters.
                     1: Only dust mass
                     2: ['mt' : dust mass and dust temperature]; ['mb': dust mass and beta]
@@ -588,16 +593,16 @@ x_stats = mbb_values(nu_obs=gn20_freq_hz,
            z=4.0553,
            flux_obs=gn20_flux,
            flux_err=gn20_flux_err,
-           dust_mass=0,
-           dust_temp=0,
-           dust_beta=1.95,
+           dust_mass_fixed=0,
+           dust_temp_fixed=0,
+           dust_beta_fixed=1.95,
            nparams=2,
            params_type='mt',
            optically_thick_regime=False,
            dust_mass_limit=[1e8,1e11],
            dust_temp_limit=[25,40],
            initial_guess_values = [1e9,30],
-           plot=False,
+           plot_corner=False,
            nsteps=1000)
 
 
