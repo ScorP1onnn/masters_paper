@@ -69,11 +69,12 @@ mask = utils.create_contour_mask(image='/home/sai/Downloads/Pisco.cii.455kms.ima
                     ra=ra,
                     dec=dec,
                     sigma=2,
+                    search_radius=1,
                     plot=True)
 
 flux,err = spectrum(cube=cub_2, ra=ra,dec=dec,radius=0.8,calc_error=True)
 
-flux_mask,err_mask = spectrum(cube=cub_2, ra=ra,dec=dec,radius=0., contour_mask= mask,calc_error=True)
+flux_mask,err_mask = spectrum(cube=cub_2, ra=ra,dec=dec, contour_mask= mask,calc_error=True)
 
 fig, (ax1,ax2) = plt.subplots(1,2)
 

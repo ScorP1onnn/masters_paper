@@ -164,7 +164,7 @@ def line_luminosity_solar(I, obs_freq, err_I=0, z=0, D_Mpc=0, err_D_Mpc=0, mu=1,
 
 
 def create_contour_mask(image,ra: float = None, dec: float = None, sigma: float = 1.0,
-                        px: int = None, py: int = None, plot=True):
+                        search_radius: float = 1., px: int = None, py: int = None, plot=True):
 
     """
 
@@ -210,6 +210,12 @@ def create_contour_mask(image,ra: float = None, dec: float = None, sigma: float 
         if np.min(distances) < min_distance:
             min_distance = np.min(distances)
             nearest_path = path
+
+    # Convert search_radius arcsecond to pixel scale
+    arcsec_to_pixel = search_radius / self.pixsize  # Assume self.pixel_scale exists in arcsec/pixel
+    if min_distance > arcsec_to_pixel:
+        print(f"Warning: No contour detected within {search_radius} arcsecond from the given RA and Dec. Returning None")
+        return None
 
     mask = np.zeros_like(subim, dtype=bool)
 
