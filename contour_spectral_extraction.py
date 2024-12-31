@@ -86,7 +86,7 @@ ax2.step(cub_2.freqs,err_mask * 1e3, color='grey')
 ax2.legend()
 plt.show()
 
-
+exit()
 x=cub_2.spectrum(ra=ra,dec=dec,radius=0.8,calc_error=True)
 
 f=x[0]

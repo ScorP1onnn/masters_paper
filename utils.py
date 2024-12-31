@@ -244,7 +244,7 @@ def create_contour_mask(image,ra: float = None, dec: float = None, sigma: float 
 
         ax2.imshow(mask, extent=extent, origin='lower', cmap='gray')
         ax2.contour(mask,extent=extent, origin='lower', colors='blue')
-        ax2.set_title(fr"Masked Array ({sigma}$\sigma$ contours around source)")
+        ax2.set_title(fr"Masked Array ({sigma}$\sigma$ contour around source)")
         plt.show()
 
     return mask
