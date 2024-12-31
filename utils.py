@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib.pyplot import tight_layout
 from uncertainties import ufloat, unumpy
 from math import *
 import scipy.constants as const
@@ -164,7 +165,7 @@ def line_luminosity_solar(I, obs_freq, err_I=0, z=0, D_Mpc=0, err_D_Mpc=0, mu=1,
 
 
 def create_contour_mask(image,ra: float = None, dec: float = None, sigma: float = 1.0,
-                        search_radius: float = 1., px: int = None, py: int = None, plot=True):
+                        search_radius: float = 2., px: int = None, py: int = None, plot=True):
 
     """
 
@@ -241,7 +242,7 @@ def create_contour_mask(image,ra: float = None, dec: float = None, sigma: float 
 
     if plot == True:
 
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
         n = colors.SymLogNorm(linthresh=linthres, linscale=0.5, vmin=-vmax, vmax=vmax)
         ax1.imshow(subim.T, origin='lower', cmap="PuOr_r", zorder=-1, norm=n, extent=extent)
         ax1.contour(subim.T, extent=extent, colors="red", levels=np.array([sigma]) * rms, zorder=1, linewidths=0.5,linestyles="-")
