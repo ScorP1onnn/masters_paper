@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import axvline
+
 import utils as utils
 import emcee
 from scipy import integrate, constants
@@ -8,6 +10,7 @@ import corner
 import interferopy.tools as iftools
 from uncertainties import ufloat
 from tqdm import tqdm
+import pandas as pd
 
 
 def optically_thick_integral(z,dust_mass,dust_temp,dust_beta,solid_angle,lower_limit,upper_limit):
@@ -157,7 +160,8 @@ def mbb_emcee(nu_obs, z, flux_obs, flux_err, dust_mass, dust_temp, dust_beta,
             nsteps,
             flat_samples_discarded,
             trace_plots,
-            corner_plot
+            corner_plot,
+            corner_kwargs
             ):
 
     def log_likelihood(params):
@@ -345,7 +349,8 @@ def mbb_emcee(nu_obs, z, flux_obs, flux_err, dust_mass, dust_temp, dust_beta,
         print("Generating corner plots...")
         corner_flat_samples = sampler.get_chain(discard=flat_samples_discarded, thin=10, flat=True).copy()
         corner_flat_samples[:, 0] = np.log10(corner_flat_samples[:, 0])  # np.log(dust_mass)
-        corner.corner(corner_flat_samples, labels=corner_labels, show_titles=True, plot_datapoints=True,quantiles=[0.16, 0.5, 0.84], title_fmt=".2f")
+        corner_kwargs = corner_kwargs or {"labels": corner_labels, "show_titles": True, "plot_datapoints": True,  "title_fmt": ".2f"}
+        corner.corner(corner_flat_samples, quantiles=[0.16, 0.5, 0.84], **corner_kwargs)
         plt.show()
 
     return sampler
@@ -378,8 +383,8 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
         nsteps: int = 1000,
         flat_samples_discarded: int = 200,
         trace_plots: bool = True,
-        corner_plot: bool = False
-        ):
+        corner_plot: bool = False,
+        corner_kwargs: dict = None):
 
     """
     Estimates the MBB parameters (dust_mass, dust_temp, dust_beta, solid_angle) from emcee fitting. emcee fitting
@@ -477,7 +482,8 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
             nsteps,
             flat_samples_discarded,
             trace_plots,
-            corner_plot)
+            corner_plot,
+            corner_kwargs)
 
 
 
@@ -494,8 +500,8 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
 
     stats['min_chi2'] = {
         "median": min_chi2,
-        "lower_1sigma": 0,
-        "upper_1sigma": 0,
+        "lower_1sigma": np.NAN,
+        "upper_1sigma": np.NAN,
         }
 
 
@@ -504,11 +510,11 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
     L_FIR_samples = []
 
 
-    print("Computing (F)IR Luminosity....")
+
 
     if nparams == 1:
         param_names = [r"dust_mass", 'μTIR x 10^13', 'μFIR x 10^13']
-        for sample in tqdm(flat_samples):
+        for sample in tqdm(flat_samples, desc="Computing (F)IR Luminosity...."):
             L_TIR_samples.append(dust_integrated_luminosity(z=z,dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'),dust_temp=dust_temp_fixed,dust_beta=dust_beta_fixed,
                                                             solid_angle=solid_angle,optically_thick_regime=optically_thick_regime,lum='tir'))
             L_FIR_samples.append(dust_integrated_luminosity(z=z,dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'),dust_temp=dust_temp_fixed,dust_beta=dust_beta_fixed,
@@ -517,7 +523,7 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
     elif nparams == 2:
         if params_type.lower() == 'mt':
             param_names = ["dust_mass", "dust_temp", 'μTIR x 10^13', 'μFIR x 10^13']
-            for sample in tqdm(flat_samples):
+            for sample in tqdm(flat_samples, desc="Computing (F)IR Luminosity...."):
                 L_TIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=sample[1], dust_beta=dust_beta_fixed,
                                                                 solid_angle=solid_angle,optically_thick_regime=optically_thick_regime, lum='tir'))
                 L_FIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=sample[1], dust_beta=dust_beta_fixed,
@@ -525,21 +531,21 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
 
         elif params_type.lower() == 'mb':
             param_names = ["dust_mass", "dust_beta", 'μTIR x 10^13', 'μFIR x 10^13']
-            for sample in tqdm(flat_samples):
+            for sample in tqdm(flat_samples, desc="Computing (F)IR Luminosity...."):
                 L_TIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=dust_temp_fixed, dust_beta=sample[1],
                                                                 solid_angle=solid_angle,optically_thick_regime=optically_thick_regime, lum='tir'))
                 L_FIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=dust_temp_fixed, dust_beta=sample[1],
                                                                 solid_angle=solid_angle,optically_thick_regime=optically_thick_regime, lum='fir'))
     elif nparams == 3:
         param_names = ["dust_mass", "dust_temp", "dust_beta", 'μTIR x 10^13', 'μFIR x 10^13']
-        for sample in tqdm(flat_samples):
+        for sample in tqdm(flat_samples, desc="Computing (F)IR Luminosity...."):
             L_TIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=sample[1], dust_beta=sample[2],
                                                             solid_angle=solid_angle, optically_thick_regime=optically_thick_regime,lum='tir'))
             L_FIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=sample[1], dust_beta=sample[2],
                                                             solid_angle=solid_angle, optically_thick_regime=optically_thick_regime,lum='fir'))
     elif nparams == 4:
         param_names = ["dust_mass", "dust_temp", "dust_beta", 'solid_angle', 'μTIR x 10^13', 'μFIR x 10^13']
-        for sample in tqdm(flat_samples):
+        for sample in tqdm(flat_samples, desc="Computing (F)IR Luminosity...."):
             L_TIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),
                                                             dust_temp=sample[1], dust_beta=sample[2],solid_angle=sample[3], optically_thick_regime=optically_thick_regime,lum='tir'))
             L_FIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=sample[1], dust_beta=sample[2],
@@ -592,6 +598,11 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
 
 def mbb_best_fit_flux(nu,z,stats: dict = None, dust_mass_default: float = 1e8, dust_temp_default: float= 35, dust_beta_default: float=1.6,
             solid_angle_default: float = 0.0, optically_thick_regime=False,output_unit_mjy=True):
+
+    #I'm using the 50th percentile values instead of samples[np.argmax(log_probabilities)] since the
+    # posterior distribution is fairly symmetrical in nature (close to a gaussian) and, hence, the values will be similar
+    # to each other
+
     # Retrieve values from stats or use defaults
     dust_mass_median = stats.get('dust_mass', {}).get('median', dust_mass_default)
     dust_temp_median = stats.get('dust_temp', {}).get('median', dust_temp_default)
@@ -600,11 +611,11 @@ def mbb_best_fit_flux(nu,z,stats: dict = None, dust_mass_default: float = 1e8, d
 
     print("")
     print("Parameters Used for Best Fit Flux")
-    print(f"Dust Mass: {dust_mass_median/1e9:.2f} x 10^9 M_solar")
-    print(f"Dust Temperature: {dust_temp_median:.2f} K")
-    print(f"Dust Beta: {dust_beta_median:.2f}")
+    print(f"Dust Mass: {dust_mass_median/1e9:.2f} x 10^9 M_solar (default: {dust_mass_default})")
+    print(f"Dust Temperature: {dust_temp_median:.2f} K (default: {dust_temp_default})")
+    print(f"Dust Beta: {dust_beta_median:.2f} (default: {dust_beta_default})")
     if optically_thick_regime:
-        print(f"Solid Angle: {solid_angle_median:.3f} arcsec^2")
+        print(f"Solid Angle: {solid_angle_median:.3f} arcsec^2 (default: {solid_angle_default})")
 
 
     flux_fit = utils.dust_s_obs(nu_obs=nu,
@@ -743,7 +754,8 @@ plt.show()
 """
 
 
-
+"""
+print("J2310+1855")
 #Wang et al. 2008
 wang_freq = np.array([99,250]) # IN GHz
 wang_wave = utils.ghz_to_mum(wang_freq) #convert to micrometer
@@ -854,12 +866,6 @@ plt.show()
 
 
 plt.scatter(j2310_wave[:-1], j2310_flux[:-1] * 1e29,color='black')
-"""
-plt.scatter(wang_wave,wang_flux,label='Wang et al. 2008')
-plt.scatter(hash_wave,hash_flux.n,label='Hashimoto et al. 2018')
-plt.scatter(tripodi_wave,tripodi_flux,label='Tripodi et al. 2022')
-plt.scatter(shao_wave,shao_flux,label='Shao et al. 2019')
-"""
 plt.scatter(sai_wave,sai_flux,color='red',marker='*',label='Our Value',s=150)
 plt.plot(wave,f_j2310)
 
@@ -872,3 +878,193 @@ plt.ylabel("Flux Density [mJy]")
 plt.title("J2310+1855")
 plt.legend()
 plt.show()
+"""
+
+
+print("J2054-0005")
+
+
+#J2054-0005
+
+#SDSS from NED
+df = pd.read_csv(r'NED_photo_points/sdss_j2054_0005_table_photandseds_NED.csv')
+print(df.columns)
+
+#df.drop([0,2,4,6],inplace=True) #Dropping Pan-STARRS1 Observations and K(keck)
+
+df.drop([0,2,4,5,6],inplace=True) #Dropping Pan-STARRS1 Observations and K(keck)
+
+
+freq_ned = df['Frequency'].to_numpy()/1e9 #Convert Frequncies to GHz
+wave_ned = utils.ghz_to_mum(freq_ned) #Wavelength in micrometers
+flux_ned = df['Flux Density'].to_numpy()*1e3 #Convert to mJy
+flux_err_ned = df['Upper limit of uncertainty'].to_numpy()*1e3 #Convert to mJy
+references_ned = df['Refcode']
+
+
+print(df[['Observed Passband','Photometry Measurement','Uncertainty','Flux Density']])
+#print(freq_ned)
+#print(wave_ned)
+print(ufloat(flux_ned[0],flux_err_ned[0]))
+print(ufloat(flux_ned[1],flux_err_ned[1]))
+#print(references_ned)
+
+
+
+
+#plot_sed_wave(wave=wave_ned,fluxes=flux_ned)
+
+
+#Wise W1 value (Blain et al. 2013)
+w1_wave = np.array([3.4]) #micrometers
+w1_freq = utils.mum_to_ghz(w1_wave)
+w1_mag = ufloat(18.017,0.337)
+#Convert mag to flux for WISE: https://wise2.ipac.caltech.edu/docs/release/allsky/expsup/sec4_4h.html#conv2flux
+w1_flux = (309.540* 10**((w1_mag)/-2.5)) * 1e3 #Flux in mJy
+
+print("WISE1 FLux = ", w1_flux)
+
+
+# Leipski et al. 2014 (https://iopscience.iop.org/article/10.1088/0004-637X/785/2/154/pdf)
+
+leipski_wave = np.array([100,160,250,350]) #Wavelengths in micrometer
+leipski_freq = utils.mum_to_ghz(leipski_wave)
+leipski_flux = np.array([3.1,10.5,15.2,12.0]) #Flux in mJy
+leipski_flux_err = np.array([1.0,2.0,5.4,4.9]) #Flux in mJy
+
+"""
+#Wang et al. 2011, Wang et al. 2008, Tripodi et al 2024,
+
+wwt_freq = np.array([1.4,92.26,250, 262.6, 263.93, 488.31 , 674.97])
+wwt_wave = utils.ghz_to_mum(wwt_freq)
+wwt_flux = np.array([17e-3, 0.082, 2.38,2.93,3.08,11.71,9.87]) #Flux in mJy
+wwt_flux_err = np.array([23e-3,0.009,0.53,0.07,0.03,0.11,0.94]) #Flux in mJy
+"""
+
+#Wang et al. 2011, Wang et al. 2008, Tripodi et al 2024,
+
+wwt_freq = np.array([92.26,250, 262.6, 263.93, 674.97])
+wwt_wave = utils.ghz_to_mum(wwt_freq)
+wwt_flux = np.array([ 0.082, 2.38,2.93,3.08,9.87]) #Flux in mJy
+wwt_flux_err = np.array([0.009,0.53,0.07,0.03,0.94]) #Flux in mJy
+
+#Hashimoto et al. 2018 (https://arxiv.org/pdf/1811.00030)
+#Our data probe dust continuum emission at the rest-frame wavelength, λ_rest, of ≈ 87 μm
+hash_wave = np.array([87*(1+6.0391)]) #In micrometers
+hash_freq = utils.mum_to_ghz(hash_wave)
+hash_flux = np.array([10.35])#Flux in mJy
+hash_flux_err = np.array([0.15])#Flux in mJy
+
+
+
+#Salak et al. 2024 (https://iopscience.iop.org/article/10.3847/1538-4357/ad0df5/pdf)
+#λ_rest, of ≈ 123 μm
+salak_wave = np.array([123*(1+6.0391)]) #In micrometers
+salak_freq = utils.mum_to_ghz(salak_wave)
+salak_flux = np.array([5.723]) #Flux in mJy
+salak_flux_err = np.array([0.009]) #Flux in mJy
+
+
+#Our Value
+sai_freq = np.array([1461.134/(1+6.0391)]) #in GHz
+sai_wave = utils.ghz_to_mum(sai_freq)
+sai_flux = np.array([0.8]) #flux in mJy
+sai_flux_err = np.array([0.1]) #flux in mJy
+
+
+#Plot SED
+plt.scatter(wave_ned,flux_ned,label='SDSS-NED')
+plt.scatter(w1_wave,w1_flux.n,label='W1-Blain et al. 2013')
+plt.scatter(leipski_wave,leipski_flux,label='Leipski et al. 2014')
+plt.scatter(wwt_wave,wwt_flux,label='WWT')
+plt.scatter(hash_wave,hash_flux,label='Hashimoto et al. 2018')
+plt.scatter(salak_wave,salak_flux,label='Salak et al. 2024')
+
+plt.scatter(sai_wave,sai_flux,label='Our Value',marker='*',s=120,color='blue')
+
+axvline(63 * (1+6.0391))
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel(r"Observed Wavelength [$\mu$m]")
+plt.ylabel("Flux Density [mJy]")
+plt.title("J2054-0005")
+plt.legend()
+plt.show()
+
+
+z_j2054 = 6.0391
+
+#size: Hashimoto et al. 2019, Wang et al. 2013, Salak et al. 2024, ISHII et al. 2024 (https://arxiv.org/pdf/2408.09944)
+J2054_size = np.mean(np.array([0.23*0.15,0.27*0.26,0.1567*0.1321,0.42*0.23]))
+
+J2054_hz = np.concatenate([wwt_freq,hash_freq,salak_freq,sai_freq]) * 1e9
+J2054_wave = np.concatenate([wwt_wave,hash_wave,salak_wave,sai_wave])
+J2054_flux = np.concatenate([wwt_flux,hash_flux,salak_flux,sai_flux]) * 1e-29
+J2054_flux_err = np.concatenate([wwt_flux_err,hash_flux_err,salak_flux_err,sai_flux_err])* 1e-29
+
+x_stats_j2054 = mbb_values(nu_obs=J2054_hz,
+                     z=6.0391,
+                     gmf=1,
+                     flux_obs=J2054_flux,
+                     flux_err=J2054_flux_err,
+                     solid_angle=J2054_size,
+                     dust_mass_fixed=0,
+                     dust_temp_fixed=0,
+                     dust_beta_fixed=0,
+                     nparams=3,
+                     params_type='mt',
+                     optically_thick_regime=True,
+                     dust_mass_limit=[1e7,1e9],
+                     dust_temp_limit=[50,80],
+                     dust_beta_limit=[1.5,3.0],
+                     initial_guess_values = [1e8,64,2.1],
+                     nsteps=2000,
+                     flat_samples_discarded=300,
+                     trace_plots=True,
+                     corner_plot=True)
+
+dust_mass_median = x_stats_j2054['dust_mass']['median']
+dust_mass_err = np.max(np.asarray([x_stats_j2054['dust_mass']['upper_1sigma'],x_stats_j2054['dust_mass']['lower_1sigma'] ]))
+
+dust_temp_median =  x_stats_j2054['dust_temp']['median']
+dust_temp_err = np.max(np.asarray([x_stats_j2054['dust_temp']['upper_1sigma'],x_stats_j2054['dust_temp']['lower_1sigma'] ]))
+
+dust_beta_median = x_stats_j2054['dust_beta']['median']
+dust_beta_err = np.max(np.asarray([x_stats_j2054['dust_beta']['upper_1sigma'],x_stats_j2054['dust_beta']['lower_1sigma'] ]))
+
+ir_median = x_stats_j2054['μTIR x 10^13']['median']
+ir_err = x_stats_j2054['μTIR x 10^13']['upper_1sigma']
+
+
+wave = np.linspace(1e1,1e4,10000)
+f_j2310 = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,
+                           z=z_j2054,
+                           stats=x_stats_j2054,
+                           solid_angle_default=J2054_size,
+                           optically_thick_regime=True,
+                           output_unit_mjy=True)
+
+
+
+plt.scatter(wwt_wave,wwt_flux,label='WWT')
+plt.scatter(hash_wave,hash_flux,label='Hashimoto et al. 2018')
+plt.scatter(salak_wave,salak_flux,label='Salak et al. 2024')
+plt.scatter(sai_wave,sai_flux,label='Our Value',marker='*',s=120,color='red')
+
+plt.plot(wave,f_j2310,label=f'Best Fit:'
+                            f'\nDust Mass = {ufloat(dust_mass_median,dust_mass_err)} M⊙'
+                            f'\nDust Temp = {ufloat(dust_temp_median,dust_temp_err)} K'
+                            f'\nBeta = {ufloat(dust_beta_median,dust_beta_err)}'
+                            f'\nL_IR = {ufloat(ir_median,ir_err)*1e13} L⊙')
+
+plt.xlim(1e1,1e4)
+plt.ylim(1e-4, 10**3)
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel(r"Observed Wavelength [$\mu$m]")
+plt.ylabel("Flux Density [mJy]")
+plt.title("J2054-0005")
+plt.legend()
+plt.show()
+
+#exit()

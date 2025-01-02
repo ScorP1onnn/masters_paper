@@ -84,7 +84,7 @@ ir_err = x_stats['TIR x 10^13']['upper_1sigma']
 plt.scatter(gn20_wave_mum[:-1],gn20_flux[:-1]*1e29,color='black')
 plt.scatter(my_value_gn20_wave_mum,my_value_gn20_flux,color='red',marker='*',label='Our Value',s=150)
 plt.plot(wave,f,label=f'Best Fit:'
-                            f'\nDust Mass = {ufloat(dust_mass_median,dust_mass_err)} L⊙'
+                            f'\nDust Mass = {ufloat(dust_mass_median,dust_mass_err)} M⊙'
                             f'\nDust Temp = {ufloat(dust_temp_median,dust_temp_err)} K'
                             f'\nBeta = {1.95} (Fixed)'
                             f'\nL_IR = {ufloat(ir_median,ir_err)*1e13} L⊙')
@@ -176,7 +176,7 @@ print(x_stats)
 plt.scatter(id141_wave[:-1],id141_flux[:-1] * 1e29,color='black')
 plt.scatter(utils.ghz_to_mum(my_value_freq), my_value_flux,color='red',marker='*',label='Our Value',s=150)
 plt.plot(wave,f_id141,label=f'Best Fit:'
-                            f'\nDust Mass = {ufloat(dust_mass_median,dust_mass_err)} L⊙'
+                            f'\nDust Mass = {ufloat(dust_mass_median,dust_mass_err)} M⊙'
                             f'\nDust Temp = {ufloat(dust_temp_median,dust_temp_err)} K'
                             f'\nBeta = {1.95} (Fixed)'
                             f'\nL_IR = {ufloat(ir_median,ir_err)*1e13} L⊙')
