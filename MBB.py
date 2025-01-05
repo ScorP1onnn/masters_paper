@@ -159,6 +159,7 @@ def mbb_emcee(nu_obs, z, flux_obs, flux_err, dust_mass, dust_temp, dust_beta,
             initial_guess_values,
             nsteps,
             flat_samples_discarded,
+            thin,
             trace_plots,
             corner_plot,
             corner_kwargs
@@ -314,6 +315,8 @@ def mbb_emcee(nu_obs, z, flux_obs, flux_err, dust_mass, dust_temp, dust_beta,
     # Run the MCMC
     sampler.run_mcmc(pos, nsteps, progress=True)
 
+    flat_samples = sampler.get_chain(discard=flat_samples_discarded, thin=thin, flat=True)
+
     # Check 1: Autocorrelation time
     try:
         tau = sampler.get_autocorr_time(discard=flat_samples_discarded, quiet=True)
@@ -347,13 +350,13 @@ def mbb_emcee(nu_obs, z, flux_obs, flux_err, dust_mass, dust_temp, dust_beta,
 
     if corner_plot == True and nparams>1:
         print("Generating corner plots...")
-        corner_flat_samples = sampler.get_chain(discard=flat_samples_discarded, thin=10, flat=True).copy()
+        corner_flat_samples = flat_samples.copy()
         corner_flat_samples[:, 0] = np.log10(corner_flat_samples[:, 0])  # np.log(dust_mass)
         corner_kwargs = corner_kwargs or {"labels": corner_labels, "show_titles": True, "plot_datapoints": True,  "title_fmt": ".2f"}
         corner.corner(corner_flat_samples, quantiles=[0.16, 0.5, 0.84], **corner_kwargs)
         plt.show()
 
-    return sampler
+    return sampler, flat_samples
 
 
 def mbb_values(nu_obs, z, flux_obs, flux_err,
@@ -382,6 +385,7 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
         initial_guess_values = None,
         nsteps: int = 1000,
         flat_samples_discarded: int = 200,
+        thin: int = 10,
         trace_plots: bool = True,
         corner_plot: bool = False,
         corner_kwargs: dict = None):
@@ -465,32 +469,33 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
     if not isinstance(initial_guess_values, list):
         raise TypeError("initial_guess_values must be a list.")
 
-    sampler = mbb_emcee(nu_obs, z, flux_obs, flux_err, dust_mass_fixed, dust_temp_fixed, dust_beta_fixed,
-            nparams, params_type, solid_angle, optically_thick_regime,
+    sampler, flat_samples = mbb_emcee(nu_obs, z, flux_obs, flux_err, dust_mass_fixed, dust_temp_fixed, dust_beta_fixed,
+                                      nparams, params_type, solid_angle, optically_thick_regime,
 
-            dust_mass_prior_distribution,
-            dust_temp_prior_distribution,
-            dust_beta_prior_distribution,
-            solid_angle_prior_distribution,
-            dust_mass_limit,
-            dust_temp_limit,
-            dust_beta_limit,
-            solid_angle_limit,
+                                      dust_mass_prior_distribution,
+                                      dust_temp_prior_distribution,
+                                      dust_beta_prior_distribution,
+                                      solid_angle_prior_distribution,
+                                      dust_mass_limit,
+                                      dust_temp_limit,
+                                      dust_beta_limit,
+                                      solid_angle_limit,
 
-            nwalkers,
-            initial_guess_values,
-            nsteps,
-            flat_samples_discarded,
-            trace_plots,
-            corner_plot,
-            corner_kwargs)
+                                      nwalkers,
+                                      initial_guess_values,
+                                      nsteps,
+                                      flat_samples_discarded,
+                                      thin,
+                                      trace_plots,
+                                      corner_plot,
+                                      corner_kwargs)
 
 
 
 
-    flat_samples = sampler.get_chain(discard=flat_samples_discarded, thin=10, flat=True)
+    #flat_samples = sampler.get_chain(discard=flat_samples_discarded, thin=10, flat=True)
 
-    log_probs = sampler.get_log_prob(discard=flat_samples_discarded, thin=10, flat=True)
+    log_probs = sampler.get_log_prob(discard=flat_samples_discarded, flat=True)
     chi2_values = -2 * log_probs
     min_chi2 = np.min(chi2_values)
 
@@ -596,7 +601,7 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
 
 
 
-def mbb_best_fit_flux(nu,z,stats: dict = None, dust_mass_default: float = 1e8, dust_temp_default: float= 35, dust_beta_default: float=1.6,
+def mbb_best_fit_flux(nu,z,stats: dict = None, dust_mass_default: float = 1e9, dust_temp_default: float= 35, dust_beta_default: float=1.6,
             solid_angle_default: float = 0.0, optically_thick_regime=False,output_unit_mjy=True):
 
     #I'm using the 50th percentile values instead of samples[np.argmax(log_probabilities)] since the
@@ -611,11 +616,12 @@ def mbb_best_fit_flux(nu,z,stats: dict = None, dust_mass_default: float = 1e8, d
 
     print("")
     print("Parameters Used for Best Fit Flux")
-    print(f"Dust Mass: {dust_mass_median/1e9:.2f} x 10^9 M_solar (default: {dust_mass_default})")
-    print(f"Dust Temperature: {dust_temp_median:.2f} K (default: {dust_temp_default})")
-    print(f"Dust Beta: {dust_beta_median:.2f} (default: {dust_beta_default})")
+    print(f"Dust Mass: {dust_mass_median/1e9:.2f} x 10^9 M_solar (default: {dust_mass_default/1e9:.2f} x 10^9 M_solar)")
+    print(f"Dust Temperature: {dust_temp_median:.2f} K (default: {dust_temp_default:.2f}) K ")
+    print(f"Dust Beta: {dust_beta_median:.2f} (default: {dust_beta_default:.2f})")
     if optically_thick_regime:
-        print(f"Solid Angle: {solid_angle_median:.3f} arcsec^2 (default: {solid_angle_default})")
+        print(f"Solid Angle: {solid_angle_median:.3f} arcsec^2 (default: {solid_angle_default:.3f})")
+    print("")
 
 
     flux_fit = utils.dust_s_obs(nu_obs=nu,
@@ -880,7 +886,7 @@ plt.legend()
 plt.show()
 """
 
-
+"""
 print("J2054-0005")
 
 
@@ -993,6 +999,7 @@ plt.show()
 
 
 z_j2054 = 6.0391
+#z_j2054 = 6.39 #Tripodi
 
 #size: Hashimoto et al. 2019, Wang et al. 2013, Salak et al. 2024, ISHII et al. 2024 (https://arxiv.org/pdf/2408.09944)
 J2054_size = np.mean(np.array([0.23*0.15,0.27*0.26,0.1567*0.1321,0.42*0.23]))
@@ -1003,7 +1010,7 @@ J2054_flux = np.concatenate([wwt_flux,hash_flux,salak_flux,sai_flux]) * 1e-29
 J2054_flux_err = np.concatenate([wwt_flux_err,hash_flux_err,salak_flux_err,sai_flux_err])* 1e-29
 
 x_stats_j2054 = mbb_values(nu_obs=J2054_hz,
-                     z=6.0391,
+                     z=z_j2054,
                      gmf=1,
                      flux_obs=J2054_flux,
                      flux_err=J2054_flux_err,
@@ -1068,3 +1075,4 @@ plt.legend()
 plt.show()
 
 #exit()
+"""
