@@ -56,12 +56,6 @@ def spectrum(cube, ra: float = None, dec: float = None, radius: float = 0.0,
 
 
 
-
-
-
-
-
-
 cub_2 = Cube('/home/sai/Downloads/Pisco.cube.50kms.image.fits')
 ra, dec = (205.533741, 9.477317341)
 
@@ -76,6 +70,7 @@ flux,err = spectrum(cube=cub_2, ra=ra,dec=dec,radius=0.8,calc_error=True)
 
 flux_mask,err_mask = spectrum(cube=cub_2, ra=ra,dec=dec, contour_mask= mask,calc_error=True)
 
+exit()
 fig, (ax1,ax2) = plt.subplots(1,2)
 
 ax1.step(cub_2.freqs, flux * 1e3, label='Round Aperture')

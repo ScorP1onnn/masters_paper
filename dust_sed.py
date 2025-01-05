@@ -264,7 +264,7 @@ ir_err = x_stats_j2054['μTIR x 10^13']['upper_1sigma']
 
 
 wave = np.linspace(1e1,1e4,10000)
-f_j2310 = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,
+f_j2054 = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,
                            z=z_j2054,
                            stats=x_stats_j2054,
                            solid_angle_default=J2054_size,
@@ -278,7 +278,7 @@ plt.scatter(hash_wave,hash_flux,label='Hashimoto et al. 2018')
 plt.scatter(salak_wave,salak_flux,label='Salak et al. 2024')
 plt.scatter(sai_wave,sai_flux,label='Our Value',marker='*',s=120,color='red')
 
-plt.plot(wave,f_j2310,label=f'Best Fit:'
+plt.plot(wave,f_j2054,label=f'Best Fit:'
                             f'\nDust Mass = {ufloat(dust_mass_median,dust_mass_err)} M⊙'
                             f'\nDust Temp = {ufloat(dust_temp_median,dust_temp_err)} K'
                             f'\nBeta = {ufloat(dust_beta_median,dust_beta_err)}'

@@ -5,11 +5,7 @@ import matplotlib.pyplot as plt
 import utils
 import interferopy.tools as iftools
 
-print("MBB.py")
-
-
-
-
+print("SMG")
 """
 #GN20
 print("GN20")
@@ -77,8 +73,8 @@ dust_mass_err = np.max(np.asarray([x_stats['dust_mass']['upper_1sigma'],x_stats[
 dust_temp_median =  x_stats['dust_temp']['median']
 dust_temp_err = np.max(np.asarray([x_stats['dust_temp']['upper_1sigma'],x_stats['dust_temp']['lower_1sigma'] ]))
 
-ir_median = x_stats['TIR x 10^13']['median']
-ir_err = x_stats['TIR x 10^13']['upper_1sigma']
+ir_median = x_stats['μTIR x 10^13']['median']
+ir_err = x_stats['μTIR x 10^13']['upper_1sigma']
 
 
 plt.scatter(gn20_wave_mum[:-1],gn20_flux[:-1]*1e29,color='black')
@@ -98,8 +94,6 @@ plt.ylabel("Flux Density [mJy]")
 plt.legend()
 plt.title("GN20")
 plt.show()
-
-exit()
 """
 
 """
@@ -178,7 +172,7 @@ plt.scatter(utils.ghz_to_mum(my_value_freq), my_value_flux,color='red',marker='*
 plt.plot(wave,f_id141,label=f'Best Fit:'
                             f'\nDust Mass = {ufloat(dust_mass_median,dust_mass_err)} M⊙'
                             f'\nDust Temp = {ufloat(dust_temp_median,dust_temp_err)} K'
-                            f'\nBeta = {1.95} (Fixed)'
+                            f'\nBeta = {1.8} (Fixed)'
                             f'\nL_IR = {ufloat(ir_median,ir_err)*1e13} L⊙')
 
 plt.xlim(1e2,5e3)
@@ -192,7 +186,6 @@ plt.title("ID141")
 plt.legend()
 plt.show()
 """
-
 
 print("HDF850.1")
 

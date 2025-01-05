@@ -4,7 +4,6 @@ from matplotlib.patches import Ellipse
 import numpy as np
 from interferopy.cube import Cube
 from matplotlib import colors
-from numpy.lib.utils import source
 import utils
 
 
@@ -347,7 +346,7 @@ def map1(nii_smg,cont_smg,coord_smg,name_smg):
         linestyles="-"
     )
 
-    closest_path_gn20,_  = utils.closest_contour(contours,0,0,2,cub.pixsize)
+    closest_path_pssj,_  = utils.closest_contour(contours,0,0,2,cub.pixsize)
 
 
     # Clear the previous contours
@@ -361,7 +360,7 @@ def map1(nii_smg,cont_smg,coord_smg,name_smg):
     axim = ax1.imshow(subim.T, origin='lower', cmap="PuOr_r", zorder=-1, norm=n, extent=extent)
 
 
-    ax1.plot(closest_path_gn20.vertices[:, 0],closest_path_gn20.vertices[:, 1],color="red",linewidth=0.5,linestyle="-",zorder=1)
+    ax1.plot(closest_path_pssj.vertices[:, 0],closest_path_pssj.vertices[:, 1],color="red",linewidth=0.5,linestyle="-",zorder=1)
     ax1.contour(subim.T, extent=extent, colors="black", levels=np.array([2, 4, 6, 8, 16, 32]) * rms, zorder=1,linewidths=0.5, linestyles="-")
     ax1.contour(subim.T, extent=extent, colors="gray", levels=np.array([-32, -16, -8, -4, -2]) * rms, zorder=1,linewidths=0.5, linestyles="--")
 
@@ -409,25 +408,6 @@ def map1(nii_smg,cont_smg,coord_smg,name_smg):
 
     rms = cub.rms[0] * scale
 
-    # ***********************
-    contours = ax2.contour(
-        subim.T,
-        extent=extent,
-        colors="red",
-        levels=np.array([1]) * rms,
-        zorder=1,
-        linewidths=0.5,
-        linestyles="-"
-    )
-
-    closest_path_id141, _ = utils.closest_contour(contours, 0, 0, 2, cub.pixsize)
-
-    # Clear the previous contours
-    for coll in contours.collections:
-        coll.remove()
-    # ***************************
-
-    ax2.plot(closest_path_id141.vertices[:, 0],closest_path_id141.vertices[:, 1],color="red",linewidth=0.5,linestyle="-",zorder=1)
     ax2.contour(subim.T, extent=extent, colors="black", levels=np.array([2, 4, 6, 8, 16, 32]) * rms, zorder=1,linewidths=0.5, linestyles="-")
     ax2.contour(subim.T, extent=extent, colors="gray", levels=np.array([-32, -16, -8, -4, -2]) * rms, zorder=1,linewidths=0.5, linestyles="--")
 
@@ -578,6 +558,26 @@ def map1(nii_smg,cont_smg,coord_smg,name_smg):
     axim = ax5.imshow(subim.T, origin='lower', cmap="PuOr_r", zorder=-1, norm=n, extent=extent)
 
     rms = cub.rms[0] * scale
+    # ***********************
+    contours = ax6.contour(
+        subim.T,
+        extent=extent,
+        colors="red",
+        levels=np.array([1]) * rms,
+        zorder=1,
+        linewidths=0.5,
+        linestyles="-"
+    )
+
+    closest_path_j2054, _ = utils.closest_contour(contours, 0, 0, 2, cub.pixsize)
+
+    # Clear the previous contours
+    for coll in contours.collections:
+        coll.remove()
+    # ***************************
+
+    ax5.plot(closest_path_j2054.vertices[:, 0], closest_path_j2054.vertices[:, 1], color="red", linewidth=0.5,linestyle="-", zorder=1)
+
     ax5.contour(subim.T, extent=extent, colors="black", levels=np.array([2, 4, 6, 8, 16, 32]) * rms, zorder=1,
                 linewidths=0.5, linestyles="-")
     ax5.contour(subim.T, extent=extent, colors="gray", levels=np.array([-32, -16, -8, -4, -2]) * rms, zorder=1,
@@ -643,14 +643,14 @@ def map1(nii_smg,cont_smg,coord_smg,name_smg):
         linestyles="-"
     )
 
-    closest_path_hdf, _ = utils.closest_contour(contours, 0, 0, 2, cub.pixsize)
+    closest_path_j2310, _ = utils.closest_contour(contours, 0, 0, 2, cub.pixsize)
 
     # Clear the previous contours
     for coll in contours.collections:
         coll.remove()
     # ***************************
 
-    ax6.plot(closest_path_hdf.vertices[:, 0], closest_path_hdf.vertices[:, 1], color="red", linewidth=0.5,linestyle="-", zorder=1)
+    ax6.plot(closest_path_j2310.vertices[:, 0], closest_path_j2310.vertices[:, 1], color="red", linewidth=0.5,linestyle="-", zorder=1)
 
 
     ax6.contour(subim.T, extent=extent, colors="black", levels=np.array([ 2, 4, 6, 8, 16, 32]) * rms, zorder=1,
@@ -687,44 +687,41 @@ def map1(nii_smg,cont_smg,coord_smg,name_smg):
 
 
 
+sigma=1
 
 
+nii_qso = ["/home/sai/nii-m0/vbb2/2322-nii-m0.fits","/home/sai/nii-m0/w16ef002/2054-nii-m0.fits","/home/sai/nii-m0/w16ef001/2310-nii-m0.fits"]
+cont_qso = ["/home/sai/saimurali/vbb2-wbb7-2322-c1mm-selfcal.fits","/home/sai/saimurali/w16ef002-2054-c1mm.fits","/home/sai/saimurali/w16ef001-2310-c1mm.fits"]
+coord_qso = [(350.5299167,19.7395556),(313.5271250,-0.0873889),(347.6620881,18.9221944)]
+name_qso = ["PSSJ2322+1944","J2054+0005","J2310+1855"]
 
 
+pssj_mask = utils.create_contour_mask(image=nii_qso[0],
+               ra=coord_qso[0][0],
+               dec=coord_qso[0][1],
+               sigma=sigma,
+               plot=False)
 
+j2054_mask = utils.create_contour_mask(image=cont_qso[1],
+               ra=coord_qso[1][0],
+               dec=coord_qso[1][1],
+               sigma=sigma,
+               plot=False)
 
-sigma = 1
-
-
-nii_smg = ["/home/sai/nii-m0/veb2/gn20-nii-m0.fits","/home/sai/nii-m0/vcb2/id141-nii-m0.fits","/home/sai/nii-m0/vdb2/hdf850-nii-m0.fits"]
-cont_smg=["/home/sai/saimurali/veb2-gn20-c1mm-selfcal.fits","/home/sai/saimurali/vcb2-id141-c1mm-selfcal.fits","/home/sai/saimurali/vdb2-hdf850-c1mm.fits"]
-coord_smg = [(189.2995833,62.3700278),(216.0580417,2.3846667),(189.2167500,62.2072222)]
-name_smg=["GN20","ID141","HDF850.1"]
-
-gn20_nii_mask = utils.create_contour_mask(image=nii_smg[0],
-               ra=coord_smg[0][0],
-               dec=coord_smg[0][1],
+j2310_mask = utils.create_contour_mask(image=cont_qso[2],
+               ra=coord_qso[2][0],
+               dec=coord_qso[2][1],
                sigma=sigma,
                plot=False)
 
 
-id141_nii_mask = utils.create_contour_mask(image=nii_smg[1],
-               ra=coord_smg[1][0],
-               dec=coord_smg[1][1],
-               sigma=sigma,
-               plot=False)
+sigma_source_mask_qso = [pssj_mask,j2054_mask,j2310_mask]
 
 
-hdf_cont_mask = utils.create_contour_mask(image=cont_smg[2],
-               ra=coord_smg[2][0],
-               dec=coord_smg[2][1],
-               sigma=sigma,
-               plot=False)
 
+#map_all(nii_smg,cont_smg,coord_smg,name_smg)
 
-sigma_source_mask_smg = [gn20_nii_mask,id141_nii_mask,hdf_cont_mask]
-map1(nii_smg,cont_smg,coord_smg,name_smg)
+map1(nii_qso,cont_qso,coord_qso,name_qso)
 
 exit()
-
 

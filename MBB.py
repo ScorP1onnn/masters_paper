@@ -514,11 +514,9 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
     L_TIR_samples = []
     L_FIR_samples = []
 
-
-
+    param_names = ["dust_mass", "dust_temp", "dust_beta", 'solid_angle'][:nparams] + [ 'μTIR x 10^13', 'μFIR x 10^13', 'TIR x 10^13','FIR x 10^13']
 
     if nparams == 1:
-        param_names = [r"dust_mass", 'μTIR x 10^13', 'μFIR x 10^13']
         for sample in tqdm(flat_samples, desc="Computing (F)IR Luminosity...."):
             L_TIR_samples.append(dust_integrated_luminosity(z=z,dust_mass=utils.mass_kgs_solar_conversion(sample[0],'solar'),dust_temp=dust_temp_fixed,dust_beta=dust_beta_fixed,
                                                             solid_angle=solid_angle,optically_thick_regime=optically_thick_regime,lum='tir'))
@@ -527,7 +525,6 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
 
     elif nparams == 2:
         if params_type.lower() == 'mt':
-            param_names = ["dust_mass", "dust_temp", 'μTIR x 10^13', 'μFIR x 10^13']
             for sample in tqdm(flat_samples, desc="Computing (F)IR Luminosity...."):
                 L_TIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=sample[1], dust_beta=dust_beta_fixed,
                                                                 solid_angle=solid_angle,optically_thick_regime=optically_thick_regime, lum='tir'))
@@ -535,21 +532,19 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
                                                                 solid_angle=solid_angle,optically_thick_regime=optically_thick_regime, lum='fir'))
 
         elif params_type.lower() == 'mb':
-            param_names = ["dust_mass", "dust_beta", 'μTIR x 10^13', 'μFIR x 10^13']
+            param_names = ["dust_mass", "dust_beta", 'μTIR x 10^13', 'μFIR x 10^13', 'TIR x 10^13', 'FIR x 10^13']
             for sample in tqdm(flat_samples, desc="Computing (F)IR Luminosity...."):
                 L_TIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=dust_temp_fixed, dust_beta=sample[1],
                                                                 solid_angle=solid_angle,optically_thick_regime=optically_thick_regime, lum='tir'))
                 L_FIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=dust_temp_fixed, dust_beta=sample[1],
                                                                 solid_angle=solid_angle,optically_thick_regime=optically_thick_regime, lum='fir'))
     elif nparams == 3:
-        param_names = ["dust_mass", "dust_temp", "dust_beta", 'μTIR x 10^13', 'μFIR x 10^13']
         for sample in tqdm(flat_samples, desc="Computing (F)IR Luminosity...."):
             L_TIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=sample[1], dust_beta=sample[2],
                                                             solid_angle=solid_angle, optically_thick_regime=optically_thick_regime,lum='tir'))
             L_FIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),dust_temp=sample[1], dust_beta=sample[2],
                                                             solid_angle=solid_angle, optically_thick_regime=optically_thick_regime,lum='fir'))
     elif nparams == 4:
-        param_names = ["dust_mass", "dust_temp", "dust_beta", 'solid_angle', 'μTIR x 10^13', 'μFIR x 10^13']
         for sample in tqdm(flat_samples, desc="Computing (F)IR Luminosity...."):
             L_TIR_samples.append(dust_integrated_luminosity(z=z, dust_mass=utils.mass_kgs_solar_conversion(sample[0], 'solar'),
                                                             dust_temp=sample[1], dust_beta=sample[2],solid_angle=sample[3], optically_thick_regime=optically_thick_regime,lum='tir'))
@@ -557,7 +552,7 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
                                                             solid_angle=sample[3], optically_thick_regime=optically_thick_regime,lum='fir'))
 
 
-    flat_samples = np.column_stack((flat_samples, np.asarray(L_TIR_samples) / 1e13, np.asarray(L_FIR_samples) / 1e13))
+    flat_samples = np.column_stack((flat_samples, np.asarray(L_TIR_samples) / 1e13, np.asarray(L_FIR_samples) / 1e13, (np.asarray(L_TIR_samples) / 1e13)/gmf, (np.asarray(L_FIR_samples) / 1e13)/gmf))
     for i, name in enumerate(param_names):
         param_samples = flat_samples[:, i]  # Extract samples for parameter
         p16, median, p84 = np.percentile(param_samples, percentiles)  # Compute percentiles
@@ -570,6 +565,7 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
 
     print("")
     print("EMCEE Fit Values")
+    print(f'μ = {gmf}')
     for name, values in stats.items():
         if name == 'min_chi2':
             print(f"{name}: {values['median']:.2f}")
@@ -577,24 +573,6 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
             print(f"{name} x 10^9: {values['median']/1e9:.2f} (+{values['upper_1sigma']/1e9:.2f}, -{values['lower_1sigma']/1e9:.2f})")
         else:
             print(f"{name}: {values['median']:.2f} (+{values['upper_1sigma']:.2f}, -{values['lower_1sigma']:.2f})")
-
-
-    if gmf>1.:
-        flat_samples_gmf_ir = np.column_stack(((np.asarray(L_TIR_samples) / 1e13)/gmf, (np.asarray(L_FIR_samples) / 1e13)/gmf))
-        gmf_ir_names = ['TIR x 10^13', 'FIR x 10^13']
-        for i, name in enumerate(gmf_ir_names):
-            param_samples = flat_samples_gmf_ir[:, i]  # Extract samples for parameter
-            p16, median, p84 = np.percentile(param_samples, percentiles)  # Compute percentiles
-            stats[name] = {
-                "median": median,
-                "lower_1sigma": median - p16,
-                "upper_1sigma": p84 - median,
-            }
-        print("")
-        print(f'μ = {gmf}')
-        for name, values in stats.items():
-            if name == 'TIR x 10^13' or name == 'FIR x 10^13':
-                print(f"{name}: {values['median']:.2f} (+{values['upper_1sigma']:.2f}, -{values['lower_1sigma']:.2f})")
 
     print("")
     return stats
