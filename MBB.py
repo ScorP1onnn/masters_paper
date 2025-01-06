@@ -455,7 +455,7 @@ def mbb_values(nu_obs, z, flux_obs, flux_err,
         raise TypeError("dust_temp_limit must be a list.")
 
     if dust_beta_limit is None:
-        dust_beta_limit = [1.5, 2.5]
+        dust_beta_limit = [1.0, 2.5]
     if not isinstance(dust_beta_limit, list):
         raise TypeError("dust_beta_limit must be a list.")
 

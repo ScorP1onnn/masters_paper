@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import scipy.constants
-from networkx.algorithms.bipartite.basic import color
 from scipy.optimize import curve_fit
 import interferopy.tools as iftools #(uses only numpy versions 1.x not 2.x)
 import matplotlib.pyplot as plt
@@ -101,7 +100,7 @@ def plot_sed_wave(wave,fluxes,wave_extra = [],fluxes_extra = []):
     # Show plot
     plt.show()
 
-
+"""
 ############################################################################################
 
 #J2054-0005
@@ -426,6 +425,17 @@ x_stats_j2310 = mbb_values(nu_obs=j2310_hz,
                      trace_plots=True,
                      corner_plot=True)
 
+dust_mass_median = x_stats_j2310['dust_mass']['median']
+dust_mass_err = np.max(np.asarray([x_stats_j2310['dust_mass']['upper_1sigma'],x_stats_j2310['dust_mass']['lower_1sigma'] ]))
+
+dust_temp_median =  x_stats_j2310['dust_temp']['median']
+dust_temp_err = np.max(np.asarray([x_stats_j2310['dust_temp']['upper_1sigma'],x_stats_j2310['dust_temp']['lower_1sigma'] ]))
+
+dust_beta_median = x_stats_j2310['dust_beta']['median']
+dust_beta_err = np.max(np.asarray([x_stats_j2310['dust_beta']['upper_1sigma'],x_stats_j2310['dust_beta']['lower_1sigma'] ]))
+
+ir_median = x_stats_j2310['μTIR x 10^13']['median']
+ir_err = x_stats_j2310['μTIR x 10^13']['upper_1sigma']
 
 wave = np.linspace(1e1,1e4,10000)
 f_j2310 = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,
@@ -442,7 +452,11 @@ plt.scatter(hash_wave,hash_flux.n,label='Hashimoto et al. 2018')
 plt.scatter(tripodi_wave,tripodi_flux,label='Tripodi et al. 2022')
 plt.scatter(shao_wave,shao_flux,label='Shao et al. 2019')
 plt.scatter(sai_wave,sai_flux,color='red',marker='*',label='Our Value',s=150)
-plt.plot(wave,f_j2310)
+plt.plot(wave,f_j2310,label=f'Best Fit:'
+                            f'\nDust Mass = {ufloat(dust_mass_median,dust_mass_err)} M⊙'
+                            f'\nDust Temp = {ufloat(dust_temp_median,dust_temp_err)} K'
+                            f'\nBeta = {ufloat(dust_beta_median,dust_beta_err)}'
+                            f'\nL_IR = {ufloat(ir_median,ir_err)*1e13} L⊙')
 
 plt.xlim(1e1,1e4)
 plt.ylim(1e-4, 10**3)
@@ -469,7 +483,7 @@ plt.title("J2310+1855")
 plt.legend()
 plt.show()
 
-
+"""
 
 
 ##################################################################################################
@@ -514,7 +528,25 @@ pssj_freq_wave = utils.mum_to_ghz(pssj_freq_ghz)
 pssj_flux = np.array([0.4, 0.31,5.79,7.5,9.6,22.5,75,79])
 pssj_flux_err = np.array([0.25,0.08,0.77,1.3,0.5,2.5,19,11])
 
-print(pssj_freq_wave)
+print(pssj_freq_ghz)
+
+stacey_freq_ghz = np.array([1.4,5,90,225,231,353,353,660])
+stacey_wave = utils.mum_to_ghz(stacey_freq_ghz)
+stacey_flux = np.array([9.8e-5,9e-5,0.00064, 0.0075 , 0.0096, 0.024,  0.0225, 0.075])
+
+plt.scatter(stacey_wave/(1+z_pssj),stacey_flux,label='Stacey et al. 2018')
+plt.scatter(j2322_wave/(1+z_pssj),j2322_flux * 1e-3,marker='*',facecolors='none',edgecolors='red',s=200,label='Used for Fit')
+plt.xscale('log')
+plt.yscale('log')
+plt.xlim(5,5e4)
+plt.ylim(1e-6,1e0)
+plt.axvline(1e2)
+plt.xlabel(r"Rest Wavelength [$\mu$m]")
+plt.ylabel("Flux Density [Jy]")
+plt.title("Stacey PSSJ2322+1944")
+plt.legend()
+plt.show()
+
 
 my_value_freq_ghz = np.array([1461.134/(1+z_pssj)])
 my_value_flux = np.array([17.4])
@@ -536,18 +568,20 @@ x_stats_pssj = mbb_values(nu_obs=pssj_freq_hz,
                      dust_mass_fixed=0,
                      dust_temp_fixed=0,
                      dust_beta_fixed=1.6,
-                     nparams=2,
+                     nparams=3,
                      params_type='mt',
                      optically_thick_regime=False,
                      dust_mass_limit=[1e7,1e10],
                      dust_temp_limit=[25,55],
-                     initial_guess_values = [1e9,40],
+                     dust_beta_limit=[1.0,2.5],
+                     initial_guess_values = [1e9,40,1.6],
                      nsteps=2000,
                      flat_samples_discarded=300,
                      thin = 10,
                      trace_plots=False,
                      corner_plot=True)
 
+#exit()
 
 dust_mass_median = x_stats_pssj['dust_mass']['median']
 dust_mass_err = np.max(np.asarray([x_stats_pssj['dust_mass']['upper_1sigma'],x_stats_pssj['dust_mass']['lower_1sigma'] ]))
@@ -555,11 +589,14 @@ dust_mass_err = np.max(np.asarray([x_stats_pssj['dust_mass']['upper_1sigma'],x_s
 dust_temp_median =  x_stats_pssj['dust_temp']['median']
 dust_temp_err = np.max(np.asarray([x_stats_pssj['dust_temp']['upper_1sigma'],x_stats_pssj['dust_temp']['lower_1sigma'] ]))
 
+dust_beta_median = x_stats_pssj['dust_beta']['median']
+dust_beta_err = np.max(np.asarray([x_stats_pssj['dust_beta']['upper_1sigma'],x_stats_pssj['dust_beta']['lower_1sigma'] ]))
+
 ir_median = x_stats_pssj['μTIR x 10^13']['median']
 ir_err = x_stats_pssj['μTIR x 10^13']['upper_1sigma']
 
-fir_median = x_stats_pssj['FIR x 10^13']['median']
-fir_err = x_stats_pssj['FIR x 10^13']['upper_1sigma']
+fir_median = x_stats_pssj['μFIR x 10^13']['median']
+fir_err = x_stats_pssj['μFIR x 10^13']['upper_1sigma']
 
 wave = np.linspace(1e1,1e4,10000)
 f_pssj = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,
@@ -570,13 +607,13 @@ f_pssj = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,
                            output_unit_mjy=True)
 
 
-plt.scatter(pssj_freq_wave[:-1], pssj_flux[:-1] * 1e29,color='black')
-plt.scatter(my_value_wave, my_value_flux,color='red',marker='*',label='Our Value',s=150)
-plt.plot(wave, f_pssj, label=f'Best Fit:'
+plt.scatter(pssj_freq_wave[:-1]/(1+z_pssj), pssj_flux[:-1] * 1e29,color='black')
+plt.scatter(my_value_wave/(1+z_pssj), my_value_flux,color='red',marker='*',label='Our Value',s=150)
+plt.plot(wave/(1+z_pssj), f_pssj, label=f'Best Fit:'
                             f'\nDust Mass = {ufloat(dust_mass_median,dust_mass_err)} L⊙'
                             f'\nDust Temp = {ufloat(dust_temp_median,dust_temp_err)} K'
-                            f'\nBeta = {1.6} (Fixed)'
-                            f'\nL_FIR = {ufloat(fir_median,fir_err)*1e13} L⊙')
+                            f'\nBeta = {ufloat(dust_beta_median,dust_beta_err)}'
+                            f'\nμL_FIR = {ufloat(fir_median,fir_err)*1e13} L⊙')
 
 plt.xlim(1e1,1e4)
 plt.ylim(1e-4, 10**3)

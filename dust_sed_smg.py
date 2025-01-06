@@ -56,7 +56,8 @@ x_stats = mbb_values(nu_obs=gn20_freq_hz,
            params_type='mt',
            optically_thick_regime=False,
            dust_mass_limit=[1e8,1e11],
-           dust_temp_limit=[25,40],
+           dust_temp_limit=[25,50],
+           dust_beta_limit=[1,2.5],
            initial_guess_values = [1e9,30],
            corner_plot=True,
            nsteps=1000,
@@ -64,7 +65,7 @@ x_stats = mbb_values(nu_obs=gn20_freq_hz,
 
 
 wave = np.linspace(1e1,1e4,10000)
-f = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,z=z_gn20, stats=x_stats,dust_beta_default=1.95,
+f = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,z=z_gn20, stats=x_stats, dust_beta_default=1.95,
                       optically_thick_regime=False,output_unit_mjy=True)
 
 dust_mass_median = x_stats['dust_mass']['median']
@@ -72,6 +73,9 @@ dust_mass_err = np.max(np.asarray([x_stats['dust_mass']['upper_1sigma'],x_stats[
 
 dust_temp_median =  x_stats['dust_temp']['median']
 dust_temp_err = np.max(np.asarray([x_stats['dust_temp']['upper_1sigma'],x_stats['dust_temp']['lower_1sigma'] ]))
+
+#dust_beta_median =  x_stats['dust_beta']['median']
+#dust_beta_err = np.max(np.asarray([x_stats['dust_beta']['upper_1sigma'],x_stats['dust_beta']['lower_1sigma'] ]))
 
 ir_median = x_stats['μTIR x 10^13']['median']
 ir_err = x_stats['μTIR x 10^13']['upper_1sigma']
@@ -82,7 +86,7 @@ plt.scatter(my_value_gn20_wave_mum,my_value_gn20_flux,color='red',marker='*',lab
 plt.plot(wave,f,label=f'Best Fit:'
                             f'\nDust Mass = {ufloat(dust_mass_median,dust_mass_err)} M⊙'
                             f'\nDust Temp = {ufloat(dust_temp_median,dust_temp_err)} K'
-                            f'\nBeta = {1.95} (Fixed)'
+                            f'\nBeta = {1.95} (Fixed)' #ufloat(dust_beta_median,dust_beta_err)
                             f'\nL_IR = {ufloat(ir_median,ir_err)*1e13} L⊙')
 
 plt.xlim(1e1,1e4)
@@ -94,9 +98,10 @@ plt.ylabel("Flux Density [mJy]")
 plt.legend()
 plt.title("GN20")
 plt.show()
+
+exit()
 """
 
-"""
 print('ID141')
 #https://iopscience.iop.org/article/10.1088/0004-637X/740/2/63/pdf
 id141_wave = np.array([250,350,500,870,880,1200,1950,2750,3000,3290])
@@ -185,8 +190,8 @@ plt.title("ID141")
 #plt.axvline(utils.ghz_to_mum(cheng2019_freq))
 plt.legend()
 plt.show()
-"""
 
+exit()
 print("HDF850.1")
 
 iftools.dust_cont_integrate(utils.mass_kgs_solar_conversion(0.72e9 ,'solar'),
