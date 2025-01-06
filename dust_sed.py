@@ -607,9 +607,9 @@ f_pssj = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,
                            output_unit_mjy=True)
 
 
-plt.scatter(pssj_freq_wave[:-1]/(1+z_pssj), pssj_flux[:-1] * 1e29,color='black')
-plt.scatter(my_value_wave/(1+z_pssj), my_value_flux,color='red',marker='*',label='Our Value',s=150)
-plt.plot(wave/(1+z_pssj), f_pssj, label=f'Best Fit:'
+plt.scatter(pssj_freq_wave[:-1], pssj_flux[:-1] * 1e29,color='black')
+plt.scatter(my_value_wave, my_value_flux,color='red',marker='*',label='Our Value',s=150)
+plt.plot(wave, f_pssj, label=f'Best Fit:'
                             f'\nDust Mass = {ufloat(dust_mass_median,dust_mass_err)} L⊙'
                             f'\nDust Temp = {ufloat(dust_temp_median,dust_temp_err)} K'
                             f'\nBeta = {ufloat(dust_beta_median,dust_beta_err)}'
