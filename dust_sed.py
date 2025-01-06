@@ -10,6 +10,7 @@ import utils as utils
 from lmfit import Model
 from scipy import integrate
 import astropy.units as u
+from MBB import mbb_values, mbb_best_fit_flux
 
 
 
@@ -104,6 +105,11 @@ def plot_sed_wave(wave,fluxes,wave_extra = [],fluxes_extra = []):
 ############################################################################################
 
 #J2054-0005
+print('dust_sed.py')
+print("J2054-0005")
+
+
+#J2054-0005
 
 #SDSS from NED
 df = pd.read_csv(r'NED_photo_points/sdss_j2054_0005_table_photandseds_NED.csv')
@@ -162,16 +168,17 @@ wwt_flux_err = np.array([23e-3,0.009,0.53,0.07,0.03,0.11,0.94]) #Flux in mJy
 
 #Wang et al. 2011, Wang et al. 2008, Tripodi et al 2024,
 
-wwt_freq = np.array([1.4,92.26,250, 262.6, 263.93, 674.97])
+wwt_freq = np.array([92.26,250, 262.6, 263.93, 674.97])
 wwt_wave = utils.ghz_to_mum(wwt_freq)
-wwt_flux = np.array([17e-3, 0.082, 2.38,2.93,3.08,9.87]) #Flux in mJy
-wwt_flux_err = np.array([23e-3,0.009,0.53,0.07,0.03,0.94]) #Flux in mJy
+wwt_flux = np.array([ 0.082, 2.38,2.93,3.08,9.87]) #Flux in mJy
+wwt_flux_err = np.array([0.009,0.53,0.07,0.03,0.94]) #Flux in mJy
 
 #Hashimoto et al. 2018 (https://arxiv.org/pdf/1811.00030)
 #Our data probe dust continuum emission at the rest-frame wavelength, λ_rest, of ≈ 87 μm
 hash_wave = np.array([87*(1+6.0391)]) #In micrometers
-has_freq = utils.mum_to_ghz(hash_wave)
-hash_flux = ufloat(10.35,0.15) #Flux in mJy
+hash_freq = utils.mum_to_ghz(hash_wave)
+hash_flux = np.array([10.35])#Flux in mJy
+hash_flux_err = np.array([0.15])#Flux in mJy
 
 
 
@@ -179,13 +186,15 @@ hash_flux = ufloat(10.35,0.15) #Flux in mJy
 #λ_rest, of ≈ 123 μm
 salak_wave = np.array([123*(1+6.0391)]) #In micrometers
 salak_freq = utils.mum_to_ghz(salak_wave)
-salak_flux = ufloat(5.723 , 0.009) #Flux in mJy
+salak_flux = np.array([5.723]) #Flux in mJy
+salak_flux_err = np.array([0.009]) #Flux in mJy
 
 
 #Our Value
 sai_freq = np.array([1461.134/(1+6.0391)]) #in GHz
 sai_wave = utils.ghz_to_mum(sai_freq)
-sai_flux = ufloat(0.8,0.1) #lux in mJy
+sai_flux = np.array([0.8]) #flux in mJy
+sai_flux_err = np.array([0.1]) #flux in mJy
 
 
 #Plot SED
@@ -193,11 +202,12 @@ plt.scatter(wave_ned,flux_ned,label='SDSS-NED')
 plt.scatter(w1_wave,w1_flux.n,label='W1-Blain et al. 2013')
 plt.scatter(leipski_wave,leipski_flux,label='Leipski et al. 2014')
 plt.scatter(wwt_wave,wwt_flux,label='WWT')
-plt.scatter(hash_wave,hash_flux.n,label='Hashimoto et al. 2018')
-plt.scatter(salak_wave,salak_flux.n,label='Salak et al. 2024')
+plt.scatter(hash_wave,hash_flux,label='Hashimoto et al. 2018')
+plt.scatter(salak_wave,salak_flux,label='Salak et al. 2024')
 
-plt.scatter(sai_wave,sai_flux.n,label='Our Value',marker='*',s=120,color='blue')
+plt.scatter(sai_wave,sai_flux,label='Our Value',marker='*',s=120,color='blue')
 
+plt.axvline(63 * (1+6.0391))
 plt.xscale('log')
 plt.yscale('log')
 plt.xlabel(r"Observed Wavelength [$\mu$m]")
@@ -207,10 +217,84 @@ plt.legend()
 plt.show()
 
 
+z_j2054 = 6.0391
+#z_j2054 = 6.39 #Tripodi
 
+#size: Hashimoto et al. 2019, Wang et al. 2013, Salak et al. 2024, ISHII et al. 2024 (https://arxiv.org/pdf/2408.09944)
+J2054_size = np.mean(np.array([0.23*0.15,0.27*0.26,0.1567*0.1321,0.42*0.23]))
+
+J2054_hz = np.concatenate([wwt_freq,hash_freq,salak_freq,sai_freq]) * 1e9
+J2054_wave = np.concatenate([wwt_wave,hash_wave,salak_wave,sai_wave])
+J2054_flux = np.concatenate([wwt_flux,hash_flux,salak_flux,sai_flux]) * 1e-29
+J2054_flux_err = np.concatenate([wwt_flux_err,hash_flux_err,salak_flux_err,sai_flux_err])* 1e-29
+
+x_stats_j2054 = mbb_values(nu_obs=J2054_hz,
+                     z=z_j2054,
+                     gmf=1,
+                     flux_obs=J2054_flux,
+                     flux_err=J2054_flux_err,
+                     solid_angle=J2054_size,
+                     dust_mass_fixed=0,
+                     dust_temp_fixed=0,
+                     dust_beta_fixed=0,
+                     nparams=3,
+                     params_type='mt',
+                     optically_thick_regime=True,
+                     dust_mass_limit=[1e7,1e9],
+                     dust_temp_limit=[50,80],
+                     dust_beta_limit=[1.5,3.0],
+                     initial_guess_values = [1e8,64,2.1],
+                     nsteps=3000,
+                     flat_samples_discarded=300,
+                     thin = 20,
+                     trace_plots=True,
+                     corner_plot=True)
+
+dust_mass_median = x_stats_j2054['dust_mass']['median']
+dust_mass_err = np.max(np.asarray([x_stats_j2054['dust_mass']['upper_1sigma'],x_stats_j2054['dust_mass']['lower_1sigma'] ]))
+
+dust_temp_median =  x_stats_j2054['dust_temp']['median']
+dust_temp_err = np.max(np.asarray([x_stats_j2054['dust_temp']['upper_1sigma'],x_stats_j2054['dust_temp']['lower_1sigma'] ]))
+
+dust_beta_median = x_stats_j2054['dust_beta']['median']
+dust_beta_err = np.max(np.asarray([x_stats_j2054['dust_beta']['upper_1sigma'],x_stats_j2054['dust_beta']['lower_1sigma'] ]))
+
+ir_median = x_stats_j2054['μTIR x 10^13']['median']
+ir_err = x_stats_j2054['μTIR x 10^13']['upper_1sigma']
+
+
+wave = np.linspace(1e1,1e4,10000)
+f_j2054 = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,
+                           z=z_j2054,
+                           stats=x_stats_j2054,
+                           solid_angle_default=J2054_size,
+                           optically_thick_regime=True,
+                           output_unit_mjy=True)
+
+
+
+plt.scatter(wwt_wave,wwt_flux,label='WWT')
+plt.scatter(hash_wave,hash_flux,label='Hashimoto et al. 2018')
+plt.scatter(salak_wave,salak_flux,label='Salak et al. 2024')
+plt.scatter(sai_wave,sai_flux,label='Our Value',marker='*',s=120,color='red')
+
+plt.plot(wave,f_j2054,label=f'Best Fit:'
+                            f'\nDust Mass = {ufloat(dust_mass_median,dust_mass_err)} M⊙'
+                            f'\nDust Temp = {ufloat(dust_temp_median,dust_temp_err)} K'
+                            f'\nBeta = {ufloat(dust_beta_median,dust_beta_err)}'
+                            f'\nL_IR = {ufloat(ir_median,ir_err)*1e13} L⊙')
+
+plt.xlim(1e1,1e4)
+plt.ylim(1e-4, 10**3)
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel(r"Observed Wavelength [$\mu$m]")
+plt.ylabel("Flux Density [mJy]")
+plt.title("J2054-0005")
+plt.legend()
+plt.show()
 
 #exit()
-
 
 
 ###################################################################################################
@@ -260,7 +344,7 @@ wise_flux_err = np.array([W1_mjy.s,W2_mjy.s,W3_mjy.s])
 print(W1_mjy,W2_mjy,W3_mjy)
 #exit()
 
-
+print("J2310+1855")
 #Wang et al. 2008
 wang_freq = np.array([99,250]) # IN GHz
 wang_wave = utils.ghz_to_mum(wang_freq) #convert to micrometer
@@ -281,17 +365,6 @@ tripodi_wave = utils.ghz_to_mum(tripodi_freq) #convert to micrometer
 tripodi_flux = np.array([0.29,1.29,1.40, 1.63, 7.73, 8.81, 11.05, 11.77, 14.63, 25.31]) #in mJy
 tripodi_flux_err = np.array([0.01, 0.03, 0.02, 0.06, 0.31, 0.13, 0.16, 0.12, 0.34, 0.19]) #in mJy
 
-
-
-"""
-#Shao, Y., Wang, R., Carilli, C. L., et al. 2019, ApJ, 876, 99
-#Herschel SPIRE and PACS
-shao_freq = np.array([131, 135, 143,147,283, 295, 338, 350, 856.549, 1199.169 , 1873.703, 2997.924]) # IN GHz
-shao_wave = utils.ghz_to_mum(shao_freq) #convert to micrometer
-shao_flux = np.array([1.10, 1.24,1.41,1.59, 11.60, 11.56, 14.49, 14.54, 22, 19.9, 13.2, 6.5]) #in mJy
-shao_flux_err = np.array([0.05, 0.04, 0.04, 0.04, 0.1,0.1,0.21,0.21, 6.9, 6.0, 2.8, 1.2])
-"""
-
 #Shao, Y., Wang, R., Carilli, C. L., et al. 2019, ApJ, 876, 99
 #Herschel SPIRE and PACS
 shao_freq = np.array([856.549, 1199.169 , 1873.703, 2997.924]) # IN GHz
@@ -299,28 +372,12 @@ shao_wave = utils.ghz_to_mum(shao_freq) #convert to micrometer
 shao_flux = np.array([ 22, 19.9, 13.2, 6.5]) #in mJy
 shao_flux_err = np.array([ 6.9, 6.0, 2.8, 1.2])
 
-
-
-"""
-#Butler et al. 2023 (https://iopscience.iop.org/article/10.3847/1538-4357/acad03/pdf)
-#λ_rest, of ≈ 119 μm
-butler_wave = np.array([119 * (1+6.0035)])
-butler_freq = utils.mum_to_ghz(butler_wave)
-butler_flux = ufloat(4.73, 0.0016) #in mJy
-"""
-
-
 #Our Value
 sai_freq = np.array([1461.134/(1+6.0035)]) #in GHz
 sai_wave = utils.ghz_to_mum(sai_freq)
 sai_flux = np.array([5.5]) #flux in mJy
 sai_flux_err = np.array([0.8])#flux in mJy
 
-
-
-
-plt.scatter(wave_ned/(1+6.0035),flux_ned,label='NED')
-plt.scatter(wise_wave/(1+6.0035),wise_flux,label='WISE')
 plt.scatter(wang_wave/(1+6.0035),wang_flux,label='Wang et al. 2008')
 plt.scatter(hash_wave/(1+6.0035),hash_flux.n,label='Hashimoto et al. 2018')
 plt.scatter(tripodi_wave/(1+6.0035),tripodi_flux,label='Tripodi et al. 2022')
@@ -338,115 +395,87 @@ plt.legend()
 plt.show()
 
 
-
-#For MBB fit
-size = np.mean(np.array([0.261 * 0.171, 0.345 * 0.212, 0.263 * 0.212, 0.214 * 0.189, 0.190 * 0.180,  0.456 * 0.422, 0.233 * 0.220, 0.330 * 0.246, 0.289 * 0.229,  0.318 *0.229]))
-
-gm = Model(utils.dust_s_obs)
-
-params = gm.make_params(
-    z=6.0035,
-    mass_dust=utils.mass_kgs_solar_conversion(4.4e8,'solar'),
-    temp_dust=72,
-    beta=1.86,
-    solid_angle = size,
-    optically_thick_regime=True,
-)
-
-params["z"].vary = False
-params['mass_dust'].vary = True
-params["temp_dust"].vary = True
-params["beta"].vary = True
-params["solid_angle"].vary = False
-
 j2310_hz = np.concatenate([wang_freq,tripodi_freq,sai_freq]) * 1e9
 j2310_wave = np.concatenate([wang_wave,tripodi_wave,sai_wave])
 j2310_flux = np.concatenate([wang_flux,tripodi_flux,sai_flux]) * 1e-29
 j2310_flux_err = np.concatenate([wang_flux_err,tripodi_flux_err,sai_flux_err])* 1e-29
 
-weights_j2310 = 1/j2310_flux_err
-result_j2310 = gm.fit(j2310_flux,params,nu_obs=j2310_hz,weights=weights_j2310,scale_covar=False)
-print(result_j2310.fit_report())
+#For MBB fit
+z_j2310 = 6.0035
+size = np.mean(np.array([0.261 * 0.171, 0.345 * 0.212, 0.263 * 0.212, 0.214 * 0.189, 0.190 * 0.180,  0.456 * 0.422, 0.233 * 0.220, 0.330 * 0.246, 0.289 * 0.229,  0.318 *0.229]))
 
-wave =  np.linspace(1e1,1e4,10000)
-
-s_tripodi = utils.dust_s_obs(nu_obs=utils.mum_to_ghz(wave)*1e9,z=6.0035,
-                             solid_angle=size,
-                             mass_dust=utils.mass_kgs_solar_conversion(4.4e8,unit_of_input_mass='solar'),
-                             temp_dust=71,
-                             beta=1.86,
-                             optically_thick_regime=True,
-                             output_unit_mjy=True
-                             )
-
-s_fit = utils.dust_s_obs(utils.mum_to_ghz(wave)*1e9, z = 6.0035,
-                         solid_angle=result_j2310.params["solid_angle"],
-                         mass_dust=result_j2310.params["mass_dust"],
-                         temp_dust=result_j2310.params['temp_dust'],
-                         beta=result_j2310.params['beta'],
-                         optically_thick_regime=True,
-                         output_unit_mjy=True)
-
-
-wave_ir  =  np.linspace(8,1e3,5000)
-freq_ir = utils.mum_to_ghz(wave_ir)
-
-i3 = integrate.quad(lambda freq: utils.dust_s_obs(freq, z = 6.0035,
-                         solid_angle=result_j2310.params["solid_angle"],
-                         mass_dust=result_j2310.params["mass_dust"],
-                         temp_dust=result_j2310.params['temp_dust'],
-                         beta=result_j2310.params['beta'],
-                         optically_thick_regime=True,
-                         output_unit_mjy=True),
-                    (scipy.constants.c/1000e-6),
-                    (scipy.constants.c/8e-6)) #mJy * Hz
+x_stats_j2310 = mbb_values(nu_obs=j2310_hz,
+                     z=z_j2310,
+                     gmf=1,
+                     flux_obs=j2310_flux,
+                     flux_err=j2310_flux_err,
+                     solid_angle=size,
+                     dust_mass_fixed=0,
+                     dust_temp_fixed=0,
+                     dust_beta_fixed=0,
+                     nparams=3,
+                     params_type='mt',
+                     optically_thick_regime=True,
+                     dust_mass_limit=[1e7,1e10],
+                     dust_temp_limit=[50,80],
+                     dust_beta_limit=[1.5,2.5],
+                     initial_guess_values = [1e8,67,1.8],
+                     nsteps=1000,
+                     flat_samples_discarded=300,
+                     thin = 10,
+                     trace_plots=True,
+                     corner_plot=True)
 
 
-
-i3 = (i3[0] * u.mJy * u.Hz).to(u.mJy * u.GHz)
-
-dl = (utils.luminosity_distance(6.0035) * u.Mpc).to(u.cm)
-tir_j2054 = (4*np.pi*(dl.value**2)*i3.value*1e-26*1e9)/(3.826*1e33)/1e13
-
-
-
-"""
-This does not work, rework on this
-tir = utils.dust_integrated_luminsoity(dust_mass=ufloat(result_j2310.params["mass_dust"].value,result_j2310.params["mass_dust"].stderr),
-                                       dust_temp=ufloat(result_j2310.params["temp_dust"].value,result_j2310.params["temp_dust"].stderr),
-                                       dust_beta=ufloat(result_j2310.params["beta"].value,result_j2310.params["beta"].stderr),
-                                       lum='tir',
-                                       print_to_console=True)
-"""
+wave = np.linspace(1e1,1e4,10000)
+f_j2310 = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,
+                           z=z_j2310,
+                           stats=x_stats_j2310,
+                           solid_angle_default=size,
+                           optically_thick_regime=True,
+                           output_unit_mjy=True)
 
 
 
 plt.scatter(wang_wave,wang_flux,label='Wang et al. 2008')
+plt.scatter(hash_wave,hash_flux.n,label='Hashimoto et al. 2018')
 plt.scatter(tripodi_wave,tripodi_flux,label='Tripodi et al. 2022')
 plt.scatter(shao_wave,shao_flux,label='Shao et al. 2019')
-plt.scatter(sai_wave,sai_flux,label='Our Value',marker='*',s=120,color='red')
+plt.scatter(sai_wave,sai_flux,color='red',marker='*',label='Our Value',s=150)
+plt.plot(wave,f_j2310)
 
-plt.plot(wave, s_tripodi,label='Tripodi et al. 2022',color='black',ls='--')
-plt.plot(wave,s_fit, label='Our Fit'
-                           f'\nDust Mass = {utils.mass_kgs_solar_conversion(ufloat(result_j2310.params["mass_dust"].value,result_j2310.params["mass_dust"].stderr),unit_of_input_mass="kg")}'
-                           f'\nDust Temp = {ufloat(result_j2310.params["temp_dust"].value,result_j2310.params["temp_dust"].stderr)} K'
-                           f'\nBeta = {ufloat(result_j2310.params["beta"].value,result_j2310.params["beta"].stderr)}'
-                           f'\nL_TIR = {np.round(tir_j2054,2)}e+13 L⊙',color='blue')
-
+plt.xlim(1e1,1e4)
+plt.ylim(1e-4, 10**3)
 plt.xscale('log')
 plt.yscale('log')
-plt.xlim(1e2,1e4)
-plt.ylim(1e-4, 10**3)
 plt.xlabel(r"Observed Wavelength [$\mu$m]")
 plt.ylabel("Flux Density [mJy]")
-plt.title("J2310-1855 Fit")
+plt.title("J2310+1855")
+plt.legend()
+plt.show()
+
+
+plt.scatter(j2310_wave[:-1], j2310_flux[:-1] * 1e29,color='black')
+plt.scatter(sai_wave,sai_flux,color='red',marker='*',label='Our Value',s=150)
+plt.plot(wave,f_j2310)
+
+plt.xlim(1e1,1e4)
+plt.ylim(1e-4, 10**3)
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel(r"Observed Wavelength [$\mu$m]")
+plt.ylabel("Flux Density [mJy]")
+plt.title("J2310+1855")
 plt.legend()
 plt.show()
 
 
 
+
 ##################################################################################################
 
+
+print("PSSJ2322")
 
 #PSSJ2322+1944
 #Last two values are from Stacey et al. 2018 (https://ui.adsabs.harvard.edu/abs/2018MNRAS.476.5075S/abstract)
@@ -459,13 +488,13 @@ j2322_flux_err = np.array([1.5e-5, 0.25e-3, 0.77e-3,0.0013, 0.0005, 0.0025, 0.01
 
 #Our Value
 j2322_sai_freq = np.array([1461.134/(1+4.12)]) #in GHz
-j2322_sai_wave = utils.ghz_to_mum(sai_freq)
-j2322_sai_flux = ufloat(17.4,2.6) #flux in mJy
-
+j2322_sai_wave = utils.ghz_to_mum(j2322_sai_freq)
+j2322_sai_flux =17.4 #flux in mJy
+j2322_sai_flux_err = 2.6
 
 plt.scatter(j2322_wave,j2322_flux)
 #plt.scatter(utils.ghz_to_mum(96),0.31) #Ignore this point
-plt.scatter(j2322_sai_wave,j2322_sai_flux.n,label='Our Value',marker='*',s=120,color='blue')
+plt.scatter(j2322_sai_wave,j2322_sai_flux,label='Our Value',marker='*',s=120,color='blue')
 
 plt.xscale('log')
 plt.yscale('log')
@@ -478,7 +507,7 @@ plt.show()
 
 #For fit
 #PSSJ2322+1944
-z=4.12
+z_pssj=4.12
 
 pssj_freq_ghz = np.array([90,96,201.78,225,231,350,utils.mum_to_ghz(450),utils.mum_to_ghz(350)]) #All obs freq
 pssj_freq_wave = utils.mum_to_ghz(pssj_freq_ghz)
@@ -487,77 +516,74 @@ pssj_flux_err = np.array([0.25,0.08,0.77,1.3,0.5,2.5,19,11])
 
 print(pssj_freq_wave)
 
-my_value_freq_ghz = np.array([1461.134/(1+z)])
+my_value_freq_ghz = np.array([1461.134/(1+z_pssj)])
 my_value_flux = np.array([17.4])
 my_value_flux_err = np.array([2.6])
 my_value_wave = utils.ghz_to_mum(my_value_freq_ghz)
 
 
-pssj_freq_ghz = np.concatenate([pssj_freq_ghz,my_value_freq_ghz])
+pssj_freq_hz = np.concatenate([pssj_freq_ghz,my_value_freq_ghz]) * 1e9
 pssj_freq_wave = np.concatenate([pssj_freq_wave,my_value_wave])
-pssj_flux = np.concatenate([pssj_flux,my_value_flux])
-pssj_flux_err = np.concatenate([pssj_flux_err,my_value_flux_err])
+pssj_flux = np.concatenate([pssj_flux,my_value_flux]) * 1e-29
+pssj_flux_err = np.concatenate([pssj_flux_err,my_value_flux_err]) * 1e-29
 
 
-gm = Model(iftools.dust_sobs)
-params = gm.make_params(
-    z=4.12,  # Example value for z
-    mass_dust=1e39,  # Initial guess for dust_mass
-    temp_dust=47.0,  # Example value for dust_temp
-    beta=1.6  # Example value for beta
-)
-
-# Fix the parameters you don't want to vary
-params["z"].vary = False
-params['mass_dust'].vary = True
-params["temp_dust"].vary = False
-params["beta"].vary = False
-
-weights = 1/(pssj_flux_err * 1e-29)
-result_vary_mass = gm.fit(pssj_flux*1e-29, params, nu_obs=pssj_freq_ghz * 1e9,weights=weights)
-dust_mass_solar_vary_mass = utils.mass_kgs_solar_conversion(ufloat(result_vary_mass.params['mass_dust'].value,result_vary_mass.params['mass_dust'].stderr),unit_of_input_mass='kg')
-dust_temp_vary_mass = ufloat(result_vary_mass.params['temp_dust'].value,result_vary_mass.params['temp_dust'].stderr)
-print(result_vary_mass.fit_report())
-
-params["z"].vary = False
-params['mass_dust'].vary = True
-params["temp_dust"].vary = True
-params["beta"].vary = False
-result_vary_mass_and_temp = gm.fit(pssj_flux*1e-29, params, nu_obs=pssj_freq_ghz * 1e9,weights=weights)
-dust_mass_solar_vary_mass_and_temp = utils.mass_kgs_solar_conversion(ufloat(result_vary_mass_and_temp.params['mass_dust'].value,result_vary_mass_and_temp.params['mass_dust'].stderr),unit_of_input_mass='kg')
-dust_temp_vary_mass_and_temp = ufloat(result_vary_mass_and_temp.params['temp_dust'].value,result_vary_mass_and_temp.params['temp_dust'].stderr)
-
-wave =  np.linspace(1e1,1e4,10000)
-s_pssj_vary_mass = iftools.dust_sobs(nu_obs=utils.mum_to_ghz(wave)*1e9,z=4.12, mass_dust=result_vary_mass.params['mass_dust'].value,temp_dust=result_vary_mass.params['temp_dust'].value,beta=1.6) * 1e29
-s_pssj_vary_mass_and_temp = iftools.dust_sobs(nu_obs=utils.mum_to_ghz(wave)*1e9,z=4.12, mass_dust=result_vary_mass_and_temp.params['mass_dust'].value,temp_dust=result_vary_mass_and_temp.params['temp_dust'].value,beta=1.6) * 1e29
+x_stats_pssj = mbb_values(nu_obs=pssj_freq_hz,
+                     z=z_pssj,
+                     gmf=5.3,
+                     flux_obs=pssj_flux,
+                     flux_err=pssj_flux_err,
+                     dust_mass_fixed=0,
+                     dust_temp_fixed=0,
+                     dust_beta_fixed=1.6,
+                     nparams=2,
+                     params_type='mt',
+                     optically_thick_regime=False,
+                     dust_mass_limit=[1e7,1e10],
+                     dust_temp_limit=[25,55],
+                     initial_guess_values = [1e9,40],
+                     nsteps=2000,
+                     flat_samples_discarded=300,
+                     thin = 10,
+                     trace_plots=False,
+                     corner_plot=True)
 
 
-utils.dust_integrated_luminsoity(dust_mass=utils.mass_kgs_solar_conversion(dust_mass_solar_vary_mass,unit_of_input_mass='solar'),dust_temp=dust_temp_vary_mass,dust_beta=ufloat(1.6,0.1),
-                           lum='both',gmf=ufloat(5.3,0.3),print_to_console=True)
+dust_mass_median = x_stats_pssj['dust_mass']['median']
+dust_mass_err = np.max(np.asarray([x_stats_pssj['dust_mass']['upper_1sigma'],x_stats_pssj['dust_mass']['lower_1sigma'] ]))
 
-utils.dust_integrated_luminsoity(dust_mass=utils.mass_kgs_solar_conversion(dust_mass_solar_vary_mass_and_temp,unit_of_input_mass='solar'),dust_temp=dust_temp_vary_mass_and_temp,dust_beta=ufloat(1.6,0.1),
-                           lum='both',gmf=ufloat(5.3,0.3),print_to_console=True)
+dust_temp_median =  x_stats_pssj['dust_temp']['median']
+dust_temp_err = np.max(np.asarray([x_stats_pssj['dust_temp']['upper_1sigma'],x_stats_pssj['dust_temp']['lower_1sigma'] ]))
 
-plt.scatter(pssj_freq_wave,pssj_flux)
-plt.scatter(my_value_wave,my_value_flux,color='red',label='Our Value')
-plt.plot(wave,s_pssj_vary_mass,label=fr'Dust Mass = {dust_mass_solar_vary_mass} L_$\odot$'
-                                     f'\nDust Temp = {dust_temp_vary_mass} K (Fixed)'
-                                     f'\nBeta = 1.6 (Fixed)'
-                                     f'\nL_FIR = {ufloat(5.99e12,0.62e12)} L⊙')
-plt.plot(wave,s_pssj_vary_mass_and_temp,label=fr'Dust Mass = {dust_mass_solar_vary_mass_and_temp} L_$\odot$'
-                                              f'\nDust Temp = {dust_temp_vary_mass_and_temp} K'
-                                              f'\nBeta = 1.6 (Fixed)')
-#plt.scatter(ghz_to_mum(np.array([1.4,5])),[9.8e-2,9e-2])
+ir_median = x_stats_pssj['μTIR x 10^13']['median']
+ir_err = x_stats_pssj['μTIR x 10^13']['upper_1sigma']
+
+fir_median = x_stats_pssj['FIR x 10^13']['median']
+fir_err = x_stats_pssj['FIR x 10^13']['upper_1sigma']
+
+wave = np.linspace(1e1,1e4,10000)
+f_pssj = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,
+                           z=z_pssj,
+                           stats=x_stats_pssj,
+                           dust_beta_default=1.6,
+                           optically_thick_regime=False,
+                           output_unit_mjy=True)
+
+
+plt.scatter(pssj_freq_wave[:-1], pssj_flux[:-1] * 1e29,color='black')
+plt.scatter(my_value_wave, my_value_flux,color='red',marker='*',label='Our Value',s=150)
+plt.plot(wave, f_pssj, label=f'Best Fit:'
+                            f'\nDust Mass = {ufloat(dust_mass_median,dust_mass_err)} L⊙'
+                            f'\nDust Temp = {ufloat(dust_temp_median,dust_temp_err)} K'
+                            f'\nBeta = {1.6} (Fixed)'
+                            f'\nL_FIR = {ufloat(fir_median,fir_err)*1e13} L⊙')
+
 plt.xlim(1e1,1e4)
 plt.ylim(1e-4, 10**3)
 plt.xscale('log')
 plt.yscale('log')
 plt.xlabel(r"Observed Wavelength [$\mu$m]")
 plt.ylabel("Flux Density [mJy]")
-plt.title("PSSJ2322+1944 Fit")
+plt.title("PSSJ2322+1944")
 plt.legend()
 plt.show()
-
-
-
-

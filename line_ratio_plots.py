@@ -63,14 +63,17 @@ ir = np.asarray([
 
 nll_pdbi_smg = np.asarray([ufloat(9.2,2.8),ufloat(1.3,0),ufloat(6.9,1.6)]) * 1e8  #ID141 my value: ufloat(6.9,1.6)]
 
-ir_pdbi_smg = np.asarray([10**ufloat(13.15,0.04),(ufloat(6.5e12,1e12)/1.7)/0.75,ufloat(9.9e13, 2.3e13) / ufloat(5.8, 0)]) 
+#ir_pdbi_smg = np.asarray([10**ufloat(13.15,0.04),(ufloat(6.5e12,1e12)/1.7)/0.75,ufloat(9.9e13, 2.3e13) / ufloat(5.8, 0)])
 #The reason why HDF850.1 has a L_FIR of 6.5e12 is because I multiplied 3.8e12 (in the Neri et al. 2014 paper) by 1.7 (instead of 1.6)
+
+#Using TIR from Sun et al. 2024 for HDF850.1 (gmf = 2.5)
+ir_pdbi_smg = np.asarray([10**ufloat(13.15,0.04),(ufloat(5e12,0)),ufloat(9.9e13, 2.3e13) / ufloat(5.8, 0)])
 print((ir_pdbi_smg/1e12))   #These values and the one in the paper match up, Great!
 print("")
 print((nll_pdbi_smg/ir_pdbi_smg)/1e-5) #nll/IR values are also consistent with table
 print('')
 
-
+#NOTE: The inclusion of the IR value from Sun et al. 2024 does not change anything in the graphs since the original value is 5.1e12 and Sun et al. 2024 value is 5e12 :)
 
 nll_pdbi_qso = np.asarray([ufloat(1.3e8, 0.6e8)])
 ir_pdbi_qso = np.asarray([ufloat(17.8e12, 1.7e12) * (1 - 0.88)])

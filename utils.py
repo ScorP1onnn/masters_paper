@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib.pyplot import tight_layout
 from uncertainties import ufloat, unumpy
 from math import *
 import scipy.constants as const
@@ -6,9 +7,13 @@ from scipy.interpolate import CubicSpline, Akima1DInterpolator
 from astropy.cosmology import FlatLambdaCDM
 from scipy import integrate
 from scipy.constants import c
-import interferopy.tools as t
+from interferopy.cube import Cube
 from tqdm import tqdm
 import astropy.units as u
+from matplotlib import colors
+import matplotlib.pyplot as plt
+from matplotlib.path import Path
+from matplotlib.patches import PathPatch
 
 def ghz_to_mum(frequency_GHz):
     return (const.c/frequency_GHz/1e9) * 1e6
@@ -160,6 +165,132 @@ def line_luminosity_solar(I, obs_freq, err_I=0, z=0, D_Mpc=0, err_D_Mpc=0, mu=1,
     print(f"Line Luminosity After magnification correction = {line_luminsoity / mu} x10^8 L_(.)")
 
 
+def closest_contour(contour_set,px,py,search_radius,pixsize):
+
+    contour_paths = [path for path in contour_set.collections[0].get_paths()]
+
+    min_distance = float('inf')
+    nearest_path = None
+
+    for path in contour_paths:
+        # Find the minimum distance from (px, py) to the current path vertices
+        # px,py = 0,0
+        vertices = path.vertices
+        distances = np.sqrt((vertices[:, 0] - px) ** 2 + (vertices[:, 1] - py) ** 2)
+        if np.min(distances) < min_distance:
+            min_distance = np.min(distances)
+            nearest_path = path
+
+    # Convert search_radius arcsecond to pixel scale
+    arcsec_to_pixel = search_radius / pixsize  # Assume self.pixel_scale exists in arcsec/pixel
+    if min_distance > arcsec_to_pixel:
+        print(f"Warning: No contour detected within {search_radius} arcsecond from the given RA and Dec. Returning None")
+        return None
+
+
+    return nearest_path, contour_paths
+
+
+def create_contour_mask(image,ra: float = None, dec: float = None, sigma: float = 1.0,
+                        search_radius: float = 2., px: int = None, py: int = None, plot=True):
+
+    """
+
+    :param image: Path for line or continuum image
+    :param ra: Right ascention in degrees.
+    :param dec: Declination in degrees.
+    :param sigma: depth of contour (sigma * rms)
+    :param px: Right ascention pixel coord.
+    :param py: Declination pixel coord.
+    :param plot: plot the contour around the source and the corresponding mask
+    :return: mask of the contour (used for contour spectral extraction)
+    """
+
+    self = Cube(image)
+    scale = 1e3
+    subim = self.im[:, :, 0] * scale
+    if px is None or py is None:
+        px, py = self.radec2pix(ra, dec)
+
+    #edgera, edgedec = cub.pix2radec([0, self.shape[0]], [0, self.shape[1]])
+    extent = [0, subim.shape[0], 0, subim.shape[1]]
+    vmax = np.nanmax(subim)
+    linthres = 5 * np.std(subim)
+
+    rms = self.rms[0] * scale
+
+
+    fig, ax = plt.subplots(1, 1)
+    contour_set = ax.contour(subim.T, extent=extent, levels=np.array([sigma]) * rms)
+    plt.close()
+
+    """
+    contour_paths = [path for path in contour_set.collections[0].get_paths()]
+
+    min_distance = float('inf')
+    nearest_path = None
+
+    for path in contour_paths:
+        # Find the minimum distance from (px, py) to the current path vertices
+        # px,py = 0,0
+        vertices = path.vertices
+        distances = np.sqrt((vertices[:, 0] - px) ** 2 + (vertices[:, 1] - py) ** 2)
+        if np.min(distances) < min_distance:
+            min_distance = np.min(distances)
+            nearest_path = path
+
+    # Convert search_radius arcsecond to pixel scale
+    arcsec_to_pixel = search_radius / self.pixsize  # Assume self.pixel_scale exists in arcsec/pixel
+    if min_distance > arcsec_to_pixel:
+        print(f"Warning: No contour detected within {search_radius} arcsecond from the given RA and Dec. Returning None")
+        return None
+    """""
+
+    nearest_path, contour_paths = closest_contour(contour_set,px,py,search_radius,self.pixsize)
+
+    mask = np.zeros_like(subim, dtype=bool)
+
+    x = np.linspace(extent[0], extent[1], subim.shape[0])
+    y = np.linspace(extent[2], extent[3], subim.shape[0])
+    X, Y = np.meshgrid(x, y)
+
+    if nearest_path is not None:
+        # Transform image indices to the plot coordinates
+        pixel_coords = np.column_stack((X.ravel(), Y.ravel()))
+        inside = nearest_path.contains_points(pixel_coords).reshape(subim.shape)
+        mask[inside] = True
+
+        # Check if any other contour lies within the nearest contour and update the mask
+        nearest_path_polygon = Path(nearest_path.vertices)
+        inner_contours = []
+        for path in contour_paths:
+            if path != nearest_path:
+                # Check if all vertices of this path lie inside the nearest contour
+                vertices = path.vertices
+                if np.all(nearest_path_polygon.contains_points(vertices)):
+                    inner_contours.append(path)
+                    path_inside = path.contains_points(pixel_coords).reshape(subim.shape)
+                    mask[path_inside] = False
+
+    if plot == True:
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
+        n = colors.SymLogNorm(linthresh=linthres, linscale=0.5, vmin=-vmax, vmax=vmax)
+        ax1.imshow(subim.T, origin='lower', cmap="PuOr_r", zorder=-1, norm=n, extent=extent)
+        ax1.contour(subim.T, extent=extent, colors="red", levels=np.array([sigma]) * rms, zorder=1, linewidths=0.5,linestyles="-")
+
+        nearest_patch = PathPatch(nearest_path, edgecolor='blue', facecolor='none', lw=2, label="Nearest Contour")
+        ax1.add_patch(nearest_patch)
+        # ax1.plot(px, py, 'bo', label='Target Pixel')
+        ax1.set_title(fr"Original Image with {sigma}$\sigma$ Contours")
+
+        ax2.imshow(mask, extent=extent, origin='lower', cmap='gray')
+        ax2.contour(mask,extent=extent, origin='lower', colors='blue')
+        ax2.set_title(fr"Masked Array ({sigma}$\sigma$ contour around source)")
+        plt.show()
+
+    return mask
+
 
 
 
@@ -187,9 +318,9 @@ def kappa(nu_rest,beta):
 
     #Taken from Interferopy (Also see: https://iopscience.iop.org/article/10.3847/1538-4357/ab2beb/pdf)
     #They have taken from Dunne+2003
-    kappa_ref = 2.64  # m**2/kg
-    kappa_nu_ref = const.c / 125e-6 # Hz
-    return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
+    #kappa_ref = 2.64  # m**2/kg
+    #kappa_nu_ref = const.c / 125e-6 # Hz
+    #return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
 
     # Dunne+2000 ?
     #kappa_ref=0.77*u.cm**2/u.g
@@ -204,10 +335,10 @@ def kappa(nu_rest,beta):
     #return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
 
     #Saw this value in Tripodi et al. 2022 (https://www.aanda.org/articles/aa/pdf/2022/09/aa43920-22.pdf)
-    #kappa_ref = 0.45 * u.cm**2/u.g
-    #kappa_ref = kappa_ref.to(u.m**2/u.kg).value
-    #kappa_nu_ref = 250e9
-    #return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
+    kappa_ref = 0.45 * u.cm**2/u.g
+    kappa_ref = kappa_ref.to(u.m**2/u.kg).value
+    kappa_nu_ref = 250e9
+    return kappa_ref * (nu_rest / kappa_nu_ref) ** beta
 
 """
     #Taken from Decarli et al. 2023
