@@ -1,0 +1,92 @@
+GN20
+
+			My Fit		Cortzen et al. 2020
+
+log(dust_mass) 	       9.3 ± 0.03 	    9.59 ± 0.10 	M_solar
+dust_temp	     32.93 ± 0.74	      33 ± 2		K
+dust_beta 	     1.95 (fixed)	       1.95
+log(L_IR)	     13.18 ± 0.03	    13.15 ± 0.04 	L_solar
+
+
+
+ID141
+
+			My Fit		 Cheng et al. 2020
+
+log(dust_mass) 	      9.89 ± 0.03 	    9.59 ± 0.10		M_solar
+dust_temp	     38.05 ± 0.87	      33 ± 2		K
+dust_beta 	      1.8 (fixed)	     1.8 (fixed)
+L_IR (x 10^13)	      1.58 ± 0.13 	     1.7 ± 0.4  	L_solar
+
+
+HDF850.1
+
+
+
+
+
+
+
+
+
+
+#########################################################################################################################
+J2054-0005
+
+			My Fit		Tripodi et al. 2024 (https://arxiv.org/pdf/2401.04211)
+
+log(dust_mass) 	      8.24 ± 0.05 	    8.02 ± 0.10 	M_solar
+dust_temp	     59.61 ± 1.13	      64 ± 2		K
+dust_beta 	      1.83 ± 0.7 	     2.1 ± 0.1
+L_IR (x 10^13)	      0.91 ± 0.06 	    0.98 ± 0.1  	L_solar
+
+
+
+
+
+J2310+1855
+
+			My Fit		Tripodi et al. 2022 (https://arxiv.org/pdf/2207.03314)
+
+log(dust_mass) 	      8.68 ± 0.02 	    8.64 ± 0.07 	M_solar
+dust_temp	     67.00 ± 0.31	      71 ± 4		K
+dust_beta 	      1.88 ± 0.03 	    1.86 ± 0.12
+L_IR (x 10^13)	      2.28 ± 0.04 	    2.48 ± 0.62  	L_solar
+
+
+
+
+PSSJ2322+1944
+
+			My Fit		Stacey et al. 2018 (https://academic.oup.com/mnras/article/476/4/5075/4893733)
+
+log(dust_mass) 	      9.34 ± 0.07 	    ----------- 	M_solar
+dust_temp	     38.19 ± 3.79	    47.4 ± 2.5		K
+dust_beta 	      1.84 ± 0.20 	    1.60 ± 0.10
+log(μL_FIR)	     13.36 ± 0.07 	   13.58 ± 0.01  	L_solar
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
