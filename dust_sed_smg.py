@@ -101,7 +101,7 @@ plt.show()
 
 exit()
 """
-
+"""
 print('ID141')
 #https://iopscience.iop.org/article/10.1088/0004-637X/740/2/63/pdf
 id141_wave = np.array([250,350,500,870,880,1200,1950,2750,3000,3290])
@@ -192,6 +192,9 @@ plt.legend()
 plt.show()
 
 exit()
+"""
+
+
 print("HDF850.1")
 
 iftools.dust_cont_integrate(utils.mass_kgs_solar_conversion(0.72e9 ,'solar'),
@@ -310,7 +313,7 @@ hdf_wave_mum = utils.ghz_to_mum(hdf_freq_hz/1e9)
 print('only dust_mass')
 x_stats_m = mbb_values(nu_obs=hdf_freq_hz,
                      z=z_hdf,
-                     gmf=1.7,
+                     gmf=2.5,
                      flux_obs=hdf_flux,
                      flux_err=hdf_flux_err,
                      dust_mass_fixed=0,
@@ -320,7 +323,7 @@ x_stats_m = mbb_values(nu_obs=hdf_freq_hz,
                      optically_thick_regime=False,
                      dust_mass_limit=[1e7,1e10],
                      dust_temp_limit=[25,45],
-                     initial_guess_values = [1e9,30],
+                     initial_guess_values = [0.2e9],
                      nsteps=1000,
                      flat_samples_discarded=300,
                      trace_plots=True,
@@ -330,7 +333,7 @@ x_stats_m = mbb_values(nu_obs=hdf_freq_hz,
 print('dust_mass & dust_temp')
 x_stats_mt = mbb_values(nu_obs=hdf_freq_hz,
                      z=z_hdf,
-                     gmf=1.7,
+                     gmf=2.5,
                      flux_obs=hdf_flux,
                      flux_err=hdf_flux_err,
                      dust_mass_fixed=0,
@@ -367,8 +370,8 @@ f_hdf_mt = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,
 
 plt.scatter(hdf_wave_mum,hdf_flux * 1e29,color='black')
 plt.scatter(my_value_wave,my_value_flux,color='red',label='Our Value')
-plt.plot(wave,f_hdf_m,label='only dust_mass')
-plt.plot(wave,f_hdf_mt,label='dust_mass & dust_temp')
+plt.plot(wave,f_hdf_m,label='Free Variable: Dust Mass')
+plt.plot(wave,f_hdf_mt,label='Free Variable: Dust Mass & Dust Temp')
 
 plt.plot(wave,s_inter_walter,label='Walter et al. 2012')
 
