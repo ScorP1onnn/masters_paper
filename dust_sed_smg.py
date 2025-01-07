@@ -222,7 +222,7 @@ downes1999_flux = np.array([2.2])
 downes1999_flux_err = np.array([0.3])
 downes1999_freq = utils.mum_to_ghz(downes1999_wave)
 
-#https://iopscience.iop.org/article/10.3847/1538-4357/aa60bb/pdf : Table 6
+#https://iopscience.iop.org/article/10.3847/1538-4357/aa60bb/pdf : Table 6 No. 30 (450 μm)
 cowie2017_wave = np.array([450])
 cowie2017_flux = np.array([13]) #mJy
 cowie2017_flux_err = np.array([2.7]) #mJy
@@ -237,7 +237,8 @@ chapin2009_freq = utils.mum_to_ghz(chapin2009_wave)
 #https://www.aanda.org/articles/aa/pdf/2014/02/aa22528-13.pdf : Table 3. 158 mum continuum flux density
 neri2014_wave = np.array([158*(1+5.183)])
 neri2014_flux = np.array([4.6]) #mJy
-neri2014_flux_err = np.array([np.nan])
+#neri2014_flux_err = np.array([np.nan])
+neri2014_flux_err = np.array([1e5])
 neri2014_freq = utils.mum_to_ghz(neri2014_wave)
 
 #https://iopscience.iop.org/article/10.1088/0004-637X/790/1/77/pdf Table 1. GDF-2000.6 is HDF850.1
@@ -300,15 +301,15 @@ print(my_value_wave)
 
 
 
-#hdf_freq_hz = np.concatenate([walter_freq[:-1],downes1999_freq,cowie2017_freq,chapin2009_freq,neri2014_freq,staguhn2014_freq,my_value_ghz])* 1e9
-#hdf_flux = np.concatenate([walter_flux[:-1],downes1999_flux,cowie2017_flux,chapin2009_flux,neri2014_flux,staguhn2014_flux,my_value_flux]) * 1e-29
-#hdf_flux_err = np.concatenate([walter_flux_err[:-1],downes1999_flux_err,cowie2017_flux_err,chapin2009_flux_err,neri2014_flux_err,staguhn2014_flux_err,my_value_flux_err]) * 1e-29
-#hdf_wave_mum = utils.ghz_to_mum(hdf_freq_hz/1e9)
-
-hdf_freq_hz = np.concatenate([walter_freq[:-1],downes1999_freq,cowie2017_freq,chapin2009_freq,staguhn2014_freq,my_value_ghz])* 1e9
-hdf_flux = np.concatenate([walter_flux[:-1],downes1999_flux,cowie2017_flux,chapin2009_flux,staguhn2014_flux,my_value_flux]) * 1e-29
-hdf_flux_err = np.concatenate([walter_flux_err[:-1],downes1999_flux_err,cowie2017_flux_err,chapin2009_flux_err,staguhn2014_flux_err,my_value_flux_err]) * 1e-29
+hdf_freq_hz = np.concatenate([walter_freq[:-1],downes1999_freq,cowie2017_freq,chapin2009_freq,neri2014_freq,staguhn2014_freq,my_value_ghz])* 1e9
+hdf_flux = np.concatenate([walter_flux[:-1],downes1999_flux,cowie2017_flux,chapin2009_flux,neri2014_flux,staguhn2014_flux,my_value_flux]) * 1e-29
+hdf_flux_err = np.concatenate([walter_flux_err[:-1],downes1999_flux_err,cowie2017_flux_err,chapin2009_flux_err,neri2014_flux_err,staguhn2014_flux_err,my_value_flux_err]) * 1e-29
 hdf_wave_mum = utils.ghz_to_mum(hdf_freq_hz/1e9)
+
+#hdf_freq_hz = np.concatenate([walter_freq[:-1],downes1999_freq,cowie2017_freq,chapin2009_freq,staguhn2014_freq,my_value_ghz])* 1e9
+#hdf_flux = np.concatenate([walter_flux[:-1],downes1999_flux,cowie2017_flux,chapin2009_flux,staguhn2014_flux,my_value_flux]) * 1e-29
+#hdf_flux_err = np.concatenate([walter_flux_err[:-1],downes1999_flux_err,cowie2017_flux_err,chapin2009_flux_err,staguhn2014_flux_err,my_value_flux_err]) * 1e-29
+#hdf_wave_mum = utils.ghz_to_mum(hdf_freq_hz/1e9)
 
 print('only dust_mass')
 x_stats_m = mbb_values(nu_obs=hdf_freq_hz,
@@ -329,6 +330,13 @@ x_stats_m = mbb_values(nu_obs=hdf_freq_hz,
                      trace_plots=True,
                      corner_plot=True)
 
+f_hdf_m = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,
+                          z=z_hdf,
+                          stats=x_stats_m,
+                          dust_temp_default=35,
+                          dust_beta_default=2.5,
+                          optically_thick_regime=False,
+                          output_unit_mjy=True)
 
 print('dust_mass & dust_temp')
 x_stats_mt = mbb_values(nu_obs=hdf_freq_hz,
@@ -350,13 +358,7 @@ x_stats_mt = mbb_values(nu_obs=hdf_freq_hz,
                      trace_plots=True,
                      corner_plot=True)
 
-f_hdf_m = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,
-                          z=z_hdf,
-                          stats=x_stats_m,
-                          dust_temp_default=35,
-                          dust_beta_default=2.5,
-                          optically_thick_regime=False,
-                          output_unit_mjy=True)
+
 
 
 f_hdf_mt = mbb_best_fit_flux(nu=utils.mum_to_ghz(wave)*1e9,

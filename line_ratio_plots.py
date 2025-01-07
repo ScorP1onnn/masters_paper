@@ -7,10 +7,10 @@ from scipy import constants as const
 from matplotlib.patches import Rectangle
 import utils
 
-print(np.log10(10.6e7),utils.log10_of_error(ufloat(10.6e7,2.4e7)))
+print(np.log10(0.15e9),utils.log10_of_error(ufloat(0.15e9,0.01e9)))
 
-print(np.log10(2.29e13),utils.log10_of_error(ufloat(2.29e13,0.36e13)))
-#exit()
+print(np.log10(0.22e9),utils.log10_of_error(ufloat(0.22e9,0.07e9)))
+exit()
 #######################################################################################################################
 nll_smg = np.asarray([ufloat(7.5e7, 2e7),
                                        ufloat(7.0e8, 0.7e8) / ufloat(14.7, 0.3),
