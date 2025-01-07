@@ -5,13 +5,12 @@ from lmfit import Model
 from math import *
 from scipy import constants as const
 from matplotlib.patches import Rectangle
+import utils
 
+print(np.log10(10.6e7),utils.log10_of_error(ufloat(10.6e7,2.4e7)))
 
-c = 1.04e-3 *  (38404.0 ** 2) * (1461.34/(1+4.24))
-print(ufloat(9.4,2) * c/5.8)
-print(ufloat(7.9,1.9) * c/5.8)
-
-
+print(np.log10(2.29e13),utils.log10_of_error(ufloat(2.29e13,0.36e13)))
+#exit()
 #######################################################################################################################
 nll_smg = np.asarray([ufloat(7.5e7, 2e7),
                                        ufloat(7.0e8, 0.7e8) / ufloat(14.7, 0.3),
@@ -213,9 +212,9 @@ def luminosity_distance(x):
     DL_Mpc = (c / H_0) * DL
     return DL_Mpc
 
-data1=np.loadtxt(open(r"/home/sai/Desktop/local_galaxies/nanyao_lu_local_galaxies.csv"),delimiter=',')
-data2=np.loadtxt(open(r"/home/sai/Desktop/local_galaxies/malhotra_local_galaxies.csv"),delimiter=',')
-data3=np.loadtxt(open(r"/home/sai/Desktop/local_galaxies/daiz_santos_local_galaxies.csv"),delimiter=',')
+data1=np.loadtxt(open(r"local_galaxies/nanyao_lu_local_galaxies.csv"),delimiter=',')
+data2=np.loadtxt(open(r"local_galaxies/malhotra_local_galaxies.csv"),delimiter=',')
+data3=np.loadtxt(open(r"local_galaxies/daiz_santos_local_galaxies.csv"),delimiter=',')
 
 
 def lu_local_galaxies_1(data1):
@@ -455,10 +454,10 @@ print(nll_ir_new_qso)
 #New Lu et al data
 constant  = (4*np.pi)/3.846e26
 
-f_lu_table_1 = open(r"/home/sai/Desktop/local_galaxies/new_lu_et_al/Lu_et_al_table1.dat")
+f_lu_table_1 = open(r"local_galaxies/new_lu_et_al/Lu_et_al_table1.dat")
 lines_lu_table_1 = f_lu_table_1.readlines()
 
-f_lu_table_nii = open(r"/home/sai/Desktop/local_galaxies/new_lu_et_al/Lu_et_al_table_nii.dat")
+f_lu_table_nii = open(r"local_galaxies/new_lu_et_al/Lu_et_al_table_nii.dat")
 lines_lu_table_nii = f_lu_table_nii.readlines()
 
 name = []
@@ -746,8 +745,8 @@ cll_nll_new_qso = cll_new_qso/nll_new_qso
 
 
 
-data_lu = np.loadtxt(r"/home/sai/Desktop/local_galaxies/lu_daiz_c_n.csv",delimiter=',')
-data_malhotra_c_n = np.loadtxt(r"/home/sai/Desktop/local_galaxies/malhotra_c_n.csv",delimiter=',')
+data_lu = np.loadtxt(r"local_galaxies/lu_daiz_c_n.csv",delimiter=',')
+data_malhotra_c_n = np.loadtxt(r"local_galaxies/malhotra_c_n.csv",delimiter=',')
 
 ir_data_lu = []
 r_data_lu = []
