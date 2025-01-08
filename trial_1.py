@@ -21,7 +21,7 @@ class EmissionLine:
     # Class-level dictionary storing the predefined emission lines
     predefined_lines = {
 
-        #Fine-Structure Lines
+        #Fine-Structure Lines (Carilli & Walter 2013) [Decarli23: Decarli et al. 2023]
         "[OI]63": {'excitation_potential': 228 * u.K, "wavelength_micron": 63.18 * u.micron, "frequency_ghz": 4744.8 * u.GHz, "einstein_A_coefficients": 9e-5 * 1/u.s, "critical_density_CW13": 4.7e5*1/(u.cm ** 3)},
         "[OI]145": {'excitation_potential': 329, "wavelength_micron": 145.53 * u.micron, "frequency_ghz": 2060.1 * u.GHz, "einstein_A_coefficients": 1.7e-5 * 1/u.s, "critical_density_CW13": 9.4e4*1/(u.cm ** 3)},
 
@@ -111,9 +111,8 @@ class EmissionLine:
         """
         return self.wavelength.to(getattr(u, unit))
 
-
-
-    def plot_example_figure(self):
+    @classmethod
+    def plot_example_figure(cls):
         """
         Plot a straight line as an example figure.
         """
@@ -123,12 +122,15 @@ class EmissionLine:
         plt.plot(x, y, label="y = 2x", color="blue", linestyle="--")
         plt.xlabel("X-axis")
         plt.ylabel("Y-axis")
-        plt.title(f"Example Plot for {self.name}")
+        #plt.title(f"Example Plot for {self.name}")
         plt.legend()
         plt.grid(True)
         plt.show()
 
 
+
+EmissionLine.plot_example_figure()
+exit()
 # Example usage
 # Create objects for predefined emission lines
 nii_205 = EmissionLine("[NII]205")
@@ -139,10 +141,11 @@ oiii_88 = EmissionLine("[OIII]88")
 lines = [nii_205, cii_158, oiii_88]
 for line in lines:
     print(f"Name: {line.name}")
-    print(f"Wavelength: {line.wavelength_micron.value} µm")
-    print(f"Frequency: {line.frequency_ghz.value} GHz")
+    print(f"Wavelength: {line.wavelength.value} µm")
+    print(f"Frequency: {line.frequency.value} GHz")
     print(f"Energy Potential: {line.excitation_potential.value} K")
     print(f"Observed Frequency at z=1: {line.observed_frequency(1).value:.2f} GHz")
+    print(f"Observed wavelength at z=1: {line.observed_wavelength(1).value:.2f} GHz")
     print("-" * 40)
 
 
