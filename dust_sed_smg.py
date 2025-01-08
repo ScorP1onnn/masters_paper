@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import utils
 import interferopy.tools as iftools
+import astropy.units as u
 
 print("SMG")
 """
@@ -264,11 +265,13 @@ s_inter_mine = utils.dust_s_obs(nu_obs=utils.mum_to_ghz(wave)*1e9,
                             optically_thick_regime=False,
                             output_unit_mjy=True)
 
+kappa_ref = 0.45 * u.cm**2/u.g
+kappa_ref = kappa_ref.to(u.m**2/u.kg)
 
 plt.scatter(walter_wave[0:2],(walter_flux[0:2]),label='Walter+12')
 plt.scatter(downes1999_wave,(downes1999_flux  ),label='Downes+99')
-plt.plot(wave,(s_inter_walter ),label=f"Walter+12 Values\n(k0 = 2.64 m2 kg−1, v0 = c/(125 μm))",color='green')
-plt.plot(wave,(s_inter_mine),label=f'Walter+12 Values\n(k0 = 0.45 cm2 g−1, v0 = 250 GHz)',color='red')
+plt.plot(wave,(s_inter_walter ),label=f"Walter+12 Values\n(k0 = 2.64 m2 / kg, v0 = {utils.mum_to_ghz(125):.0f} GHz)",color='green')
+plt.plot(wave,(s_inter_mine),label=f'Walter+12 Values\n(k0 = {kappa_ref:.3f}, v0 = 250 GHz)',color='red')
 
 plt.xlim(1e2,1e4)
 plt.ylim(1e-4 , 10**2.5)
@@ -281,7 +284,7 @@ plt.title("HDF850.1")
 plt.legend()
 plt.show()
 
-
+exit()
 
 plt.scatter(walter_wave[0:2],walter_flux[0:2],label='Walter+12')
 plt.scatter(downes1999_wave,downes1999_flux,label='Downes+99')
@@ -384,7 +387,7 @@ plt.scatter(my_value_wave,my_value_flux,color='red',label='Our Value')
 plt.plot(wave,f_hdf_m,label='Free Variable: Dust Mass')
 plt.plot(wave,f_hdf_mt,label='Free Variable: Dust Mass & Dust Temp')
 
-plt.plot(wave,s_inter_walter,label='Walter et al. 2012')
+#plt.plot(wave,s_inter_walter,label='Walter et al. 2012')
 
 plt.xlim(1e2,1e4)
 plt.ylim(1e-4, 10**2.5)

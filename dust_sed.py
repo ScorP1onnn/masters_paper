@@ -294,22 +294,22 @@ plt.legend()
 plt.show()
 
 #exit()
-
+"""
 
 ###################################################################################################
 
 #J2310+1855
 
-
+"""
 
 #PAN-STARR from NED (Check the reference paper on that wesbite)
-"""
+
 freq_ned = np.array([3.97e+14, 3.45e+14, 3.15e+14])/1e9 #Convert to GHz
 wave_ned = utils.ghz_to_mum(freq_ned)
 flux_ned = np.array([0.00000871, 0.0000506, 8.47e-5]) * 1e3 #Convert t0 mJy
 flux_err_ned = np.array([8.02e-7, 1.86e-6, 3.12e-6]) * 1e3 #Convert t0 mJy
 
-"""
+
 
 freq_ned = np.array([3.97e+14])/1e9 #Convert to GHz
 wave_ned = utils.ghz_to_mum(freq_ned)

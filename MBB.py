@@ -348,13 +348,14 @@ def mbb_emcee(nu_obs, z, flux_obs, flux_err, dust_mass, dust_temp, dust_beta,
             axes[-1].set_xlabel("Step number")
             plt.show()
 
-    if corner_plot == True and nparams>1:
-        print("Generating corner plots...")
+    if corner_plot == True:
         corner_flat_samples = flat_samples.copy()
         corner_flat_samples[:, 0] = np.log10(corner_flat_samples[:, 0])  # np.log(dust_mass)
-        corner_kwargs = corner_kwargs or {"labels": corner_labels, "show_titles": True, "plot_datapoints": True,  "title_fmt": ".2f"}
-        corner.corner(corner_flat_samples, quantiles=[0.16, 0.5, 0.84], **corner_kwargs)
-        plt.show()
+        corner_kwargs = corner_kwargs or {"labels": corner_labels, "show_titles": True, "plot_datapoints": True,"title_fmt": ".2f"}
+        if nparams>=1:
+            print("Generating corner plots...")
+            corner.corner(corner_flat_samples, quantiles=[0.16, 0.5, 0.84], **corner_kwargs)
+            plt.show()
 
     return sampler, flat_samples
 
