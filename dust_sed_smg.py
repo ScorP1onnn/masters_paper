@@ -254,18 +254,27 @@ s_inter_walter = iftools.dust_sobs(nu_obs=utils.mum_to_ghz(wave)*1e9,
                             z = 5.183,
                             mass_dust=utils.mass_kgs_solar_conversion(2.5e8,unit_of_input_mass='solar'),
                             temp_dust=35,
-                            beta=2.5) *  1e26 * 1e3
+                            beta=2.5) *  1e29
+
+s_inter_mine = utils.dust_s_obs(nu_obs=utils.mum_to_ghz(wave)*1e9,
+                            z = 5.183,
+                            dust_mass=utils.mass_kgs_solar_conversion(2.5e8,unit_of_input_mass='solar'), #10**8.17
+                            dust_temp=35,
+                            beta=2.5,
+                            optically_thick_regime=False,
+                            output_unit_mjy=True)
 
 
-plt.scatter(walter_wave[0:2],np.log10(walter_flux[0:2] * 1e-3),label='Walter+12')
-plt.scatter(downes1999_wave,np.log10(downes1999_flux  * 1e-3),label='Downes+99')
-plt.plot(wave,np.log10(s_inter_walter * 1e-3),label='Walter+12',color='green')
+plt.scatter(walter_wave[0:2],(walter_flux[0:2]),label='Walter+12')
+plt.scatter(downes1999_wave,(downes1999_flux  ),label='Downes+99')
+plt.plot(wave,(s_inter_walter ),label=f"Walter+12 Values\n(k0 = 2.64 m2 kg−1, v0 = c/(125 μm))",color='green')
+plt.plot(wave,(s_inter_mine),label=f'Walter+12 Values\n(k0 = 0.45 cm2 g−1, v0 = 250 GHz)',color='red')
 
 plt.xlim(1e2,1e4)
-#plt.ylim(1e-4 , 10**2.5)
-plt.ylim(-7 , -1.8)
+plt.ylim(1e-4 , 10**2.5)
+#plt.ylim(-7 , -1.8)
 plt.xscale('log')
-#plt.yscale('log')
+plt.yscale('log')
 plt.xlabel(r"Observed Wavelength [$\mu$m]")
 plt.ylabel("Flux Density [mJy]")
 plt.title("HDF850.1")
