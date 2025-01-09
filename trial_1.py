@@ -2,6 +2,7 @@ import numpy as np
 import astropy.units as u
 import matplotlib.pyplot as plt
 import utils
+import scipy.constants as const
 
 
 """
@@ -35,7 +36,7 @@ class EmissionLine:
 
         "[NII]122": {'excitation_potential': 188 * u.K, "wavelength_micron": 121.90 * u.micron, "frequency_ghz": 2459.4 * u.GHz, "einstein_A_coefficients": 7.5e-6 * 1/u.s, "critical_density_CW13": 310*1/(u.cm ** 3),
                      "critical_density_Decarli23": {5000:199*1/(u.cm ** 3), 10000:260*1/(u.cm ** 3), 20000:333*1/(u.cm ** 3)}},
-        "[NII]205": {'excitation_potential': 70 * u.K, "wavelength_micron": 205.80 * u.micron, "frequency_ghz": 1461.1 * u.GHz,"einstein_A_coefficients": 2.1e-6 * 1/u.s, "critical_density_CW13": 48*1/(u.cm ** 3),
+        "[NII]205": {'excitation_potential': 70 * u.K, "wavelength_micron": 205.18 * u.micron, "frequency_ghz": 1461.1 * u.GHz,"einstein_A_coefficients": 2.1e-6 * 1/u.s, "critical_density_CW13": 48*1/(u.cm ** 3),
                      "critical_density_Decarli23": {5000:127*1/(u.cm ** 3), 10000:169*1/(u.cm ** 3), 20000:222*1/(u.cm ** 3)}},
 
         "[CI]370": {'excitation_potential': 63 * u.K, "wavelength_micron": 370.42 * u.micron, "frequency_ghz": 809.34 * u.GHz,"einstein_A_coefficients": 2.7e-7 * 1/u.s, "critical_density_CW13": 1.2e3*1/(u.cm ** 3)},
@@ -52,6 +53,21 @@ class EmissionLine:
         "CO_87": {'excitation_potential': 199.1 * u.K, "wavelength_micron": 325.2 * u.micron, "frequency_ghz": 921.80 * u.GHz,"einstein_A_coefficients": 5.1e-5 * 1/u.s, "critical_density_CW13": 6.4e5*1/(u.cm ** 3)},
         "CO_98": {'excitation_potential': 248.9 * u.K, "wavelength_micron": 289.1 * u.micron, "frequency_ghz": 1036.9 * u.GHz,"einstein_A_coefficients": 7.3e-5 * 1/u.s, "critical_density_CW13": 8.7e5*1/(u.cm ** 3)},
         "CO_109": {'excitation_potential':  304.2 * u.K, "wavelength_micron": 260.2 * u.micron, "frequency_ghz": 1152.0 * u.GHz,"einstein_A_coefficients": 1.0e-4 * 1/u.s, "critical_density_CW13": 1.1e6*1/(u.cm ** 3)},
+
+    }
+
+    alma_bands = {
+
+        "1": {"frequency_range": np.array([35,50]) * u.GHz, "wavelength_range": np.array([6,8.6]) * u.mm},
+        "2": {"frequency_range": np.array([67, 116]) * u.GHz, "wavelength_range": np.array([2.6, 4,5]) * u.mm},
+        "3": {"frequency_range": np.array([84, 116]) * u.GHz, "wavelength_range": np.array([2.6, 3.6]) * u.mm},
+        "4": {"frequency_range": np.array([125, 163]) * u.GHz, "wavelength_range": np.array([1.8, 2.4]) * u.mm},
+        "5": {"frequency_range": np.array([163, 211]) * u.GHz, "wavelength_range": np.array([1.4, 1.8]) * u.mm},
+        "6": {"frequency_range": np.array([211, 275]) * u.GHz, "wavelength_range": np.array([1.1, 1.4]) * u.mm},
+        "7": {"frequency_range": np.array([275, 373]) * u.GHz, "wavelength_range": np.array([0.8, 1.1]) * u.mm},
+        "8": {"frequency_range": np.array([385, 500]) * u.GHz, "wavelength_range": np.array([0.6, 0.8]) * u.mm},
+        "9": {"frequency_range": np.array([602, 720]) * u.GHz, "wavelength_range": np.array([0.4, 0.5]) * u.mm},
+        "10": {"frequency_range": np.array([787, 950]) * u.GHz, "wavelength_range": np.array([0.3, 0.4]) * u.mm},
 
     }
 
@@ -111,6 +127,61 @@ class EmissionLine:
         """
         return self.wavelength.to(getattr(u, unit))
 
+    def convert_wavelength_frequency(self, value: u.Quantity, output_unit: u.Unit = None):
+        """
+        Convert between wavelength and frequency based on the input unit.
+
+        Parameters:value (u.Quantity): The input value with a unit of wavelength (e.g., microns, angstroms) or frequency (e.g., Hz, GHz).
+        output_unit (u.Unit, optional): The desired unit for the output. If None, it defaults to microns for wavelength or GHz for frequency.
+        Returns: u.Quantity: The converted value with the appropriate unit.
+        """
+
+        if not value.unit.is_equivalent(u.m) and value.unit.is_equivalent(u.Hz):
+            raise ValueError("Input must have a unit equivalent to wavelength or frequency.")
+
+        if output_unit is None:
+            if value.unit.is_equivalent(u.m):
+                output_unit = u.GHz  # Default output unit for frequency
+            elif value.unit.is_equivalent(u.Hz):
+                output_unit = u.micron  # Default output unit for wavelength
+
+        return value.to(output_unit, equivalencies=u.spectral())
+
+
+    def alma_band_observe(self,z:float=0.,observed_frequency_in_GHz:float=None):
+        """
+        Determine the ALMA band that can observe the line for a specific redshift or a given observed frequency.
+        :param z: Redshift
+        :param observed_frequency_in_GHz: Observed frequency in GHz
+        :return: ALMA band(s) that can observe the line or given frequency.
+        """
+        bands = []
+        if z!=0.:
+            obs_freq = self.observed_frequency(z)
+            for band, info in self.alma_bands.items():
+                freq_range = info["frequency_range"]
+                if freq_range[0] <= obs_freq <= freq_range[1]:
+                    bands.append(band)
+
+        elif z==0. and observed_frequency_in_GHz is not None:
+            if isinstance(observed_frequency_in_GHz, u.Quantity) == False:
+                observed_frequency_in_GHz = observed_frequency_in_GHz * u.GHz
+
+            for band, info in self.alma_bands.items():
+                freq_range = info["frequency_range"]
+                if freq_range[0] <= observed_frequency_in_GHz <= freq_range[1]:
+                    bands.append(band)
+
+        if bands:
+            print(f"{self.name} can be observed with ALMA band(s) {bands}")
+        else:
+            if z!=0:
+                print(f"The observed frequency ({obs_freq:.2f}) for line {self.name} at z = {z} is not within the range of any ALMA band.")
+            elif z==0 and observed_frequency_in_GHz is not None:
+                print(f"The frequency {observed_frequency_in_GHz:.2f} is not within the range of any ALMA band.")
+
+
+
     @classmethod
     def plot_example_figure(cls):
         """
@@ -128,8 +199,13 @@ class EmissionLine:
         plt.show()
 
 
+line = EmissionLine("[NII]205")
 
-EmissionLine.plot_example_figure()
+print(line.wavelength)
+a = line.convert_wavelength_frequency(line.wavelength)
+print(a)
+#line.alma_band_observe(observed_frequency_in_GHz=600)
+#EmissionLine.plot_example_figure()
 exit()
 # Example usage
 # Create objects for predefined emission lines
