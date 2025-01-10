@@ -71,6 +71,30 @@ class EmissionLine:
 
     }
 
+    noema_bands = {
+        #https://www.craf.eu/radio-observatories-in-europe/noema/
+        "1": {"frequency_range": np.array([72,116]) * u.GHz, "wavelength_range": np.round(utils.ghz_to_mum(np.array([72,116])),2) * u.micron},
+        "2": {"frequency_range": np.array([127,179]) * u.GHz,"wavelength_range": np.round(utils.ghz_to_mum(np.array([127,179])),2) * u.micron},
+        "3": {"frequency_range": np.array([200,276]) * u.GHz,"wavelength_range": np.round(utils.ghz_to_mum(np.array([200,276])),2) * u.micron},
+        "4": {"frequency_range": np.array([275,373]) * u.GHz,"wavelength_range": np.round(utils.ghz_to_mum(np.array([275,373])),2) * u.micron},
+    }
+
+    vla_bands = {
+        #https://science.nrao.edu/facilities/vla/docs/manuals/oss2016A/performance/bands
+        "vla_4": {"frequency_range": np.array([0.058,0.084]) * u.GHz, "wavelength_range": np.round(utils.ghz_to_mum(np.array([0.058,0.084])),2) * u.micron},
+        "vla_p": {"frequency_range": np.array([0.23, 0.47]) * u.GHz, "wavelength_range": np.round(utils.ghz_to_mum(np.array([0.23, 0.47])), 2) * u.micron},
+        "vla_l": {"frequency_range": np.array([1.0,2.0]) * u.GHz, "wavelength_range": np.round(utils.ghz_to_mum(np.array([1.0,2.0])), 2) * u.micron},
+        "vla_s": {"frequency_range": np.array([2.0,4.0]) * u.GHz,"wavelength_range": np.round(utils.ghz_to_mum(np.array([2.0,4.0])), 2) * u.micron},
+        "vla_c": {"frequency_range": np.array([4.0,8.0]) * u.GHz,"wavelength_range": np.round(utils.ghz_to_mum(np.array([4.0,8.0])), 2) * u.micron},
+        "vla_x": {"frequency_range": np.array([8.0,12.0]) * u.GHz,"wavelength_range": np.round(utils.ghz_to_mum(np.array([8.0,12.0])), 2) * u.micron},
+        "vla_ku": {"frequency_range": np.array([12.0,18.0]) * u.GHz,"wavelength_range": np.round(utils.ghz_to_mum(np.array([12.0,18.0])), 2) * u.micron},
+        "vla_k": {"frequency_range": np.array([18.0,26.5]) * u.GHz,"wavelength_range": np.round(utils.ghz_to_mum(np.array([18.0,26.5])), 2) * u.micron},
+        "vla_ka": {"frequency_range": np.array([26.5,40.0]) * u.GHz,"wavelength_range": np.round(utils.ghz_to_mum(np.array([26.5,40.0])), 2) * u.micron},
+        "vla_q": {"frequency_range": np.array([40.0,50.0]) * u.GHz,"wavelength_range": np.round(utils.ghz_to_mum(np.array([40.0,50.0])), 2) * u.micron},
+
+    }
+
+
     def __init__(self, name):
         """
         Initialize an EmissionLine object using the predefined line information.
@@ -113,62 +137,86 @@ class EmissionLine:
         """
         return self.wavelength * (1 + redshift)
 
-    def to_unit(self, value: u.Quantity, output_unit: u.Unit = None):
+
+    def to_unit_freq(self, output_unit: u.Unit = None,save=False):
+        """
+        Convert frequency of the line in GHz to another unit
+        :param output_unit: Output unit to be converted into
+        :param save: save the converted value into self.frequency
+        :return: Return converted value
+        """
         if output_unit is None:
             raise ValueError("Output unit must be specified.")
-        if not value.unit.is_equivalent(output_unit):
-            raise u.UnitsError(f"Units {value.unit} and {output_unit} are not equivalent.")
-        return value.to(output_unit)
+        if not output_unit.is_equivalent(u.Hz):
+            raise u.UnitsError(f"The specified unit '{output_unit}' is not a frequency unit.")
+        if save:
+            self.frequency = self.frequency.to(output_unit)
+        else:
+            return self.frequency.to(output_unit)
 
-    def to_wavelength(self,value: u.Quantity, output_unit: u.Unit = None):
+
+
+    def to_unit_wave(self, output_unit: u.Unit = None,save=False):
+        """
+        Convert wavelength of the line in micron to another unit
+        :param output_unit: Output unit to be converted into
+        :param save: save the converted value into self.wavelength
+        :return: Return converted value
+        """
         if output_unit is None:
-            output_unit = u.GHz  # Default output unit for frequency
-        if not value.unit.is_equivalent(u.m):
-            raise u.UnitsError(f"Unit should be of wavelength units.")
-        return value.to(output_unit, equivalencies=u.spectral())
+            raise ValueError("Output unit must be specified.")
+        if not output_unit.is_equivalent(u.m):
+            raise u.UnitsError(f"The specified unit '{output_unit}' is not a wavelength unit.")
+        if save:
+            self.wavelength= self.wavelength.to(output_unit)
+        else:
+            return self.wavelength.to(output_unit)
 
-    def to_frequency(self,value: u.Quantity, output_unit: u.Unit = None):
-        if output_unit is None:
-            output_unit = u.micron  # Default output unit for wavelength
-        if not value.unit.is_equivalent(u.Hz):
-            raise u.UnitsError(f"Unit should be of Frequency units.")
-        return value.to(output_unit, equivalencies=u.spectral())
 
-    def alma_declination_range(self):
-        print(f"ALMA can observe targets within +40 deg and -70 deg, corresponding to a maximum elevation of 25 deg at the ALMA site can be observed.\n"
+
+    def alma_declination_range(self,telescope:str='alma'):
+        if telescope.lower() == 'alma':
+            print(f"ALMA can observe targets within +40 deg and -70 deg, corresponding to a maximum elevation of 25 deg at the ALMA site can be observed.\n"
               f"Use 'http://catserver.ing.iac.es/staralt/index.php' if the see if the source is visible to ALMA or not")
+        elif telescope.lower() == 'noema':
+            #https://www.iram.fr/GENERAL/calls/s20/NOEMACapabilities.pdf Section:2.8
+            print(f"NOEMA can observe targets within +90 deg and -30 deg. sources between declinations of −30 and −25 degrees"
+                  f"\nare very difficult to observe and they do not rise much above 10 degrees in elevation"
+                  f"\nand suffer from heavy shadowing in the compact configurations")
 
-    def alma_band_observe(self,z:float=0.,observed_frequency_in_GHz:float=None):
+
+    def alma_band_observe(self,z:float=None,observed_frequency_in_GHz:u.Unit = None):
         """
         Determine the ALMA band that can observe the line for a specific redshift or a given observed frequency.
         :param z: Redshift
         :param observed_frequency_in_GHz: Observed frequency in GHz
         :return: ALMA band(s) that can observe the line or given frequency.
         """
+        telescope_data = self.alma_bands.items()
         bands = []
-        if z!=0.:
+        if z!=None:
             obs_freq = self.observed_frequency(z)
-            for band, info in self.alma_bands.items():
-                freq_range = info["frequency_range"]
+            for band, info in telescope_data:
+                freq_range = info.get("frequency_range")
                 if freq_range[0] <= obs_freq <= freq_range[1]:
                     bands.append(band)
 
-        elif z==0. and observed_frequency_in_GHz is not None:
-            if isinstance(observed_frequency_in_GHz, u.Quantity) == False:
-                observed_frequency_in_GHz = observed_frequency_in_GHz * u.GHz
-
-            for band, info in self.alma_bands.items():
-                freq_range = info["frequency_range"]
+        elif z==None and observed_frequency_in_GHz is not None:
+            if not observed_frequency_in_GHz.is_equivalent(u.Hz):
+                raise u.UnitsError(f"The specified unit is not a frequency unit.")
+            obs_freq = observed_frequency_in_GHz.to(u.GHz)
+            for band, info in telescope_data:
+                freq_range = info.get("frequency_range")
                 if freq_range[0] <= observed_frequency_in_GHz <= freq_range[1]:
                     bands.append(band)
 
         if bands:
-            print(f"{self.name} can be observed with ALMA band(s) {bands}")
+            print(f"{self.name} can be observed with ALMA band(s): {', '.join(bands)}")
         else:
-            if z!=0:
-                print(f"The observed frequency ({obs_freq:.2f}) for line {self.name} at z = {z} is not within the range of any ALMA band.")
-            elif z==0 and observed_frequency_in_GHz is not None:
-                print(f"The frequency {observed_frequency_in_GHz:.2f} is not within the range of any ALMA band.")
+            if z!=None:
+                print(f"The observed frequency ({obs_freq:.2f}) for {self.name} at z={z} is not within the range of any ALMA band.")
+            elif z==None and observed_frequency_in_GHz is not None:
+                print(f"The frequency {obs_freq:.2f} is not within the range of any ALMA band.")
 
 
     """
@@ -210,7 +258,11 @@ class EmissionLine:
 
 
 line = EmissionLine("[NII]205")
-
+print(line.to_unit_wave(u.mm))
+print(line.wavelength.value)
+print("")
+line.to_unit_wave(u.mm,True)
+print(line.wavelength)
 
 
 exit()
