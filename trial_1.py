@@ -113,40 +113,30 @@ class EmissionLine:
         """
         return self.wavelength * (1 + redshift)
 
-    def frequency_conversion(self,unit:str):
-        """
-        :param unit: Unit to convert to (e.g. Hz, MHz)
-        :return: Converted frequency with the new unit
-        """
-        return self.frequency.to(getattr(u, unit))
-
-    def wavelength_conversion(self,unit:str):
-        """
-        :param unit: Unit to convert to (e.g., 'angstrom', 'nm', 'micron', 'm')
-        :return: Converted wavelength with the new unit
-        """
-        return self.wavelength.to(getattr(u, unit))
-
-    def convert_wavelength_frequency(self, value: u.Quantity, output_unit: u.Unit = None):
-        """
-        Convert between wavelength and frequency based on the input unit.
-
-        Parameters:value (u.Quantity): The input value with a unit of wavelength (e.g., microns, angstroms) or frequency (e.g., Hz, GHz).
-        output_unit (u.Unit, optional): The desired unit for the output. If None, it defaults to microns for wavelength or GHz for frequency.
-        Returns: u.Quantity: The converted value with the appropriate unit.
-        """
-
-        if not value.unit.is_equivalent(u.m) and value.unit.is_equivalent(u.Hz):
-            raise ValueError("Input must have a unit equivalent to wavelength or frequency.")
-
+    def to_unit(self, value: u.Quantity, output_unit: u.Unit = None):
         if output_unit is None:
-            if value.unit.is_equivalent(u.m):
-                output_unit = u.GHz  # Default output unit for frequency
-            elif value.unit.is_equivalent(u.Hz):
-                output_unit = u.micron  # Default output unit for wavelength
+            raise ValueError("Output unit must be specified.")
+        if not value.unit.is_equivalent(output_unit):
+            raise u.UnitsError(f"Units {value.unit} and {output_unit} are not equivalent.")
+        return value.to(output_unit)
 
+    def to_wavelength(self,value: u.Quantity, output_unit: u.Unit = None):
+        if output_unit is None:
+            output_unit = u.GHz  # Default output unit for frequency
+        if not value.unit.is_equivalent(u.m):
+            raise u.UnitsError(f"Unit should be of wavelength units.")
         return value.to(output_unit, equivalencies=u.spectral())
 
+    def to_frequency(self,value: u.Quantity, output_unit: u.Unit = None):
+        if output_unit is None:
+            output_unit = u.micron  # Default output unit for wavelength
+        if not value.unit.is_equivalent(u.Hz):
+            raise u.UnitsError(f"Unit should be of Frequency units.")
+        return value.to(output_unit, equivalencies=u.spectral())
+
+    def alma_declination_range(self):
+        print(f"ALMA can observe targets within +40 deg and -70 deg, corresponding to a maximum elevation of 25 deg at the ALMA site can be observed.\n"
+              f"Use 'http://catserver.ing.iac.es/staralt/index.php' if the see if the source is visible to ALMA or not")
 
     def alma_band_observe(self,z:float=0.,observed_frequency_in_GHz:float=None):
         """
@@ -181,13 +171,32 @@ class EmissionLine:
                 print(f"The frequency {observed_frequency_in_GHz:.2f} is not within the range of any ALMA band.")
 
 
+    """
+    #@classmethod
+    def plot_example_figure(self):
+        #Plot a straight line as an example figure.
+        
+        z = np.linspace(0,10,101)
 
-    @classmethod
-    def plot_example_figure(cls):
-        """
-        Plot a straight line as an example figure.
-        """
-        x = [0, 1, 2, 3, 4, 5]
+        for i in range(1,11):
+            plt.fill_between(z, self.alma_bands[f'{i}'].get('frequency_range')[0].value,
+                             self.alma_bands[f'{i}'].get('frequency_range')[1].value,color='skyblue', alpha=0.1)
+            plt.axhline(y=self.alma_bands[f'{i}'].get('frequency_range')[0].value, color='black', linestyle='-',linewidth=0.5)
+            plt.axhline(y=self.alma_bands[f'{i}'].get('frequency_range')[1].value, color='black', linestyle='-',linewidth=0.5)
+
+            middle = (self.alma_bands[f'{i}'].get('frequency_range')[0].value + self.alma_bands[f'{i}'].get('frequency_range')[1].value)/2
+            if i==1:
+                plt.text(x=0.5, y=middle - 2, s=f'ALMA {i}', color='black', fontsize=7, ha='center', va='center')
+            elif i == 2:
+                plt.text(x=0.5, y=middle - 18, s=f'ALMA {i}', color='black', fontsize=7, ha='center', va='center')
+            else:
+                plt.text(x=0.5,y=middle - 4, s=f'ALMA {i}',color='black',fontsize=7,ha='center',va='center')
+
+        plt.xlim(z[0],z[-1])
+        plt.ylim(10,1300)
+        plt.yscale('log')
+        plt.show()
+        exit()
         y = [i * 2 for i in x]  # y = 2x
         plt.figure(figsize=(6, 4))
         plt.plot(x, y, label="y = 2x", color="blue", linestyle="--")
@@ -197,15 +206,23 @@ class EmissionLine:
         plt.legend()
         plt.grid(True)
         plt.show()
+        """
 
 
 line = EmissionLine("[NII]205")
 
-print(line.wavelength)
+
+
+exit()
+
+
+
+
+#print(line.wavelength)
 a = line.convert_wavelength_frequency(line.wavelength)
 print(a)
+line.alma_declination_range()
 #line.alma_band_observe(observed_frequency_in_GHz=600)
-#EmissionLine.plot_example_figure()
 exit()
 # Example usage
 # Create objects for predefined emission lines
