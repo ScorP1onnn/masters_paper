@@ -121,7 +121,7 @@ class EmissionLine:
             self.einstein_A_coefficients = line_info["einstein_A_coefficients"]
             self.critical_density_CW13 = line_info["critical_density_CW13"]
 
-            if self.name == "[OIII]52" or "[OIII]88" or "[NII]122" or "[NII]205":
+            if self.name in ["[OIII]52","[OIII]88","[NII]122","[NII]205"]:
                 self.critical_density_Decarli23 = line_info["critical_density_Decarli23"]
 
 
@@ -137,42 +137,37 @@ class EmissionLine:
         """
         return self.wavelength * (1 + redshift)
 
-
-    def to_unit_freq(self, output_unit: u.Unit = None,save=False):
+    def to_unit(self, attribute: str, output_unit: u.Unit = None, save=False):
         """
-        Convert frequency of the line in GHz to another unit
-        :param output_unit: Output unit to be converted into
-        :param save: save the converted value into self.frequency
-        :return: Return converted value
-        """
-        if output_unit is None:
-            raise ValueError("Output unit must be specified.")
-        if not output_unit.is_equivalent(u.Hz):
-            raise u.UnitsError(f"The specified unit '{output_unit}' is not a frequency unit.")
-        if save:
-            self.frequency = self.frequency.to(output_unit)
-        else:
-            return self.frequency.to(output_unit)
+        Convert the specified attribute (frequency or wavelength) to another unit.
 
-
-
-    def to_unit_wave(self, output_unit: u.Unit = None,save=False):
-        """
-        Convert wavelength of the line in micron to another unit
-        :param output_unit: Output unit to be converted into
-        :param save: save the converted value into self.wavelength
-        :return: Return converted value
+        :param attribute: The attribute to convert ('frequency' or 'wavelength').
+        :param output_unit: Output unit to be converted into.
+        :param save: Save the converted value back to the attribute if True.
+        :return: Return converted value if save is False.
         """
         if output_unit is None:
             raise ValueError("Output unit must be specified.")
-        if not output_unit.is_equivalent(u.m):
-            raise u.UnitsError(f"The specified unit '{output_unit}' is not a wavelength unit.")
-        if save:
-            self.wavelength= self.wavelength.to(output_unit)
+
+        # Determine the type of unit and attribute
+        if attribute == 'frequency':
+            if not output_unit.is_equivalent(u.Hz):
+                raise u.UnitsError(f"The specified unit '{output_unit}' is not a frequency unit.")
+            value = self.frequency
+        elif attribute == 'wavelength':
+            if not output_unit.is_equivalent(u.m):
+                raise u.UnitsError(f"The specified unit '{output_unit}' is not a wavelength unit.")
+            value = self.wavelength
         else:
-            return self.wavelength.to(output_unit)
+            raise AttributeError(f"Attribute '{attribute}' is not supported. Use 'frequency' or 'wavelength'.")
 
+        # Perform conversion
+        converted_value = value.to(output_unit)
 
+        if save:
+            setattr(self, attribute, converted_value)
+        else:
+            return converted_value
 
     def declination_range(self,telescope:str='alma'):
         if telescope.lower() == 'alma':
@@ -232,6 +227,7 @@ class EmissionLine:
 
 
 
+#Some checks
 
 line = EmissionLine("[NII]205")
 line.declination_range(telescope='alma')
@@ -241,40 +237,20 @@ line.alma_band_observe(z=4, telescope='alma')
 line.alma_band_observe(z=4, telescope='noema')
 line.alma_band_observe(z=4, telescope='vla')
 
-
-exit()
-# Example usage
-# Create objects for predefined emission lines
-nii_205 = EmissionLine("[NII]205")
-cii_158 = EmissionLine("[CII]158")
-oiii_88 = EmissionLine("[OIII]88")
-
-# Print information for all lines
-lines = [nii_205, cii_158, oiii_88]
-for line in lines:
-    print(f"Name: {line.name}")
-    print(f"Wavelength: {line.wavelength.value} µm")
-    print(f"Frequency: {line.frequency.value} GHz")
-    print(f"Energy Potential: {line.excitation_potential.value} K")
-    print(f"Observed Frequency at z=1: {line.observed_frequency(1).value:.2f} GHz")
-    print(f"Observed wavelength at z=1: {line.observed_wavelength(1).value:.2f} GHz")
-    print("-" * 40)
+print("")
+print(line.frequency)
+converted_freq = line.to_unit(attribute='frequency', output_unit=u.kHz)
+print(converted_freq)
+line.to_unit(attribute='frequency', output_unit=u.kHz, save=True)  # Save back to `obj.frequency`.
+print(line.frequency)
 
 
-
-
+print("")
+print(line.wavelength)
+converted_wave = line.to_unit(attribute='wavelength', output_unit=u.nm)
+print(converted_wave)
+line.to_unit(attribute='wavelength', output_unit=u.nm, save=True)  # Save back to `obj.wavelength`.
+print(line.wavelength)
 
 
 exit()
-# Plot an example figure for one of the lines
-cii_158.plot_example_figure()
-
-print(nii_205.excitation_potential)
-exit()
-
-"""
-To account for 15% calibration error in the flux error, the formula used is
-
-corrected/accounted_error = SQRT( (error ** 2) + ((0.15 * flux_value)**2) )
-
-"""
