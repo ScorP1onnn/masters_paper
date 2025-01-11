@@ -185,14 +185,23 @@ class EmissionLine:
                   f"\nand suffer from heavy shadowing in the compact configurations")
 
 
-    def alma_band_observe(self,z:float=None,observed_frequency_in_GHz:u.Unit = None):
+    def alma_band_observe(self,z:float=None,telescope:str='alma',observed_frequency_in_GHz:u.Unit = None):
         """
         Determine the ALMA band that can observe the line for a specific redshift or a given observed frequency.
         :param z: Redshift
         :param observed_frequency_in_GHz: Observed frequency in GHz
         :return: ALMA band(s) that can observe the line or given frequency.
         """
-        telescope_data = self.alma_bands.items()
+        if telescope.lower()=='alma':
+            telescope_data = self.alma_bands.items()
+        elif telescope.lower() == 'noema':
+            telescope_data = self.noema_bands.items()
+        elif telescope.lower() == 'vla':
+            telescope_data = self.vla_bands.items()
+        else:
+            raise ValueError(f"Telescope not found. \nTelesclopes available: 'ALMA', 'NOEMA', and 'VLA'." )
+
+
         bands = []
         if z!=None:
             obs_freq = self.observed_frequency(z)
@@ -202,7 +211,7 @@ class EmissionLine:
                     bands.append(band)
 
         elif z==None and observed_frequency_in_GHz is not None:
-            if not observed_frequency_in_GHz.is_equivalent(u.Hz):
+            if not observed_frequency_in_GHz.unit.is_equivalent(u.Hz):
                 raise u.UnitsError(f"The specified unit is not a frequency unit.")
             obs_freq = observed_frequency_in_GHz.to(u.GHz)
             for band, info in telescope_data:
@@ -211,12 +220,15 @@ class EmissionLine:
                     bands.append(band)
 
         if bands:
-            print(f"{self.name} can be observed with ALMA band(s): {', '.join(bands)}")
+            if z!=None:
+                print(rf"{self.name} at z={z} (v_obs = {obs_freq:.2f}) can be observed with {telescope.upper()} band: {', '.join(bands)}")
+            elif z == None and observed_frequency_in_GHz is not None:
+                print(f"The frequency {obs_freq:.2f} can be observed with {telescope.upper()} band: {', '.join(bands)}")
         else:
             if z!=None:
-                print(f"The observed frequency ({obs_freq:.2f}) for {self.name} at z={z} is not within the range of any ALMA band.")
+                print(f"The observed frequency ({obs_freq:.2f}) for {self.name} at z={z} is not within the range of any {telescope.upper()} band.")
             elif z==None and observed_frequency_in_GHz is not None:
-                print(f"The frequency {obs_freq:.2f} is not within the range of any ALMA band.")
+                print(f"The frequency {obs_freq:.2f} is not within the range of any {telescope.upper()} band.")
 
 
     """
@@ -258,23 +270,13 @@ class EmissionLine:
 
 
 line = EmissionLine("[NII]205")
-print(line.to_unit_wave(u.mm))
-print(line.wavelength.value)
-print("")
-line.to_unit_wave(u.mm,True)
-print(line.wavelength)
-
-
-exit()
-
-
-
-
-#print(line.wavelength)
-a = line.convert_wavelength_frequency(line.wavelength)
-print(a)
 line.alma_declination_range()
-#line.alma_band_observe(observed_frequency_in_GHz=600)
+print("")
+line.alma_band_observe(z=4, telescope='alma')
+line.alma_band_observe(z=4, telescope='noema')
+line.alma_band_observe(z=4, telescope='vla')
+
+
 exit()
 # Example usage
 # Create objects for predefined emission lines
