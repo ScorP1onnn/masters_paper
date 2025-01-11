@@ -174,7 +174,7 @@ class EmissionLine:
 
 
 
-    def alma_declination_range(self,telescope:str='alma'):
+    def declination_range(self,telescope:str='alma'):
         if telescope.lower() == 'alma':
             print(f"ALMA can observe targets within +40 deg and -70 deg, corresponding to a maximum elevation of 25 deg at the ALMA site can be observed.\n"
               f"Use 'http://catserver.ing.iac.es/staralt/index.php' if the see if the source is visible to ALMA or not")
@@ -231,46 +231,11 @@ class EmissionLine:
                 print(f"The frequency {obs_freq:.2f} is not within the range of any {telescope.upper()} band.")
 
 
-    """
-    #@classmethod
-    def plot_example_figure(self):
-        #Plot a straight line as an example figure.
-        
-        z = np.linspace(0,10,101)
-
-        for i in range(1,11):
-            plt.fill_between(z, self.alma_bands[f'{i}'].get('frequency_range')[0].value,
-                             self.alma_bands[f'{i}'].get('frequency_range')[1].value,color='skyblue', alpha=0.1)
-            plt.axhline(y=self.alma_bands[f'{i}'].get('frequency_range')[0].value, color='black', linestyle='-',linewidth=0.5)
-            plt.axhline(y=self.alma_bands[f'{i}'].get('frequency_range')[1].value, color='black', linestyle='-',linewidth=0.5)
-
-            middle = (self.alma_bands[f'{i}'].get('frequency_range')[0].value + self.alma_bands[f'{i}'].get('frequency_range')[1].value)/2
-            if i==1:
-                plt.text(x=0.5, y=middle - 2, s=f'ALMA {i}', color='black', fontsize=7, ha='center', va='center')
-            elif i == 2:
-                plt.text(x=0.5, y=middle - 18, s=f'ALMA {i}', color='black', fontsize=7, ha='center', va='center')
-            else:
-                plt.text(x=0.5,y=middle - 4, s=f'ALMA {i}',color='black',fontsize=7,ha='center',va='center')
-
-        plt.xlim(z[0],z[-1])
-        plt.ylim(10,1300)
-        plt.yscale('log')
-        plt.show()
-        exit()
-        y = [i * 2 for i in x]  # y = 2x
-        plt.figure(figsize=(6, 4))
-        plt.plot(x, y, label="y = 2x", color="blue", linestyle="--")
-        plt.xlabel("X-axis")
-        plt.ylabel("Y-axis")
-        #plt.title(f"Example Plot for {self.name}")
-        plt.legend()
-        plt.grid(True)
-        plt.show()
-        """
 
 
 line = EmissionLine("[NII]205")
-line.alma_declination_range()
+line.declination_range(telescope='alma')
+line.declination_range(telescope='noema')
 print("")
 line.alma_band_observe(z=4, telescope='alma')
 line.alma_band_observe(z=4, telescope='noema')
